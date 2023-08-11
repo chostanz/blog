@@ -3,25 +3,50 @@ package service
 import (
 	"blog/database"
 	"blog/models"
-	"log"
+
+	"github.com/jmoiron/sqlx"
 )
+
+var db *sqlx.DB = database.Koneksi()
 
 func CheckCredential(userLogin models.LoginParam) (int, bool) {
 	var isAuthentication bool
 	var id int
 
-	database.DB.QueryRow("SELECT IF(COUNT(*), 'true', 'false') FROM users WHERE username = :username AND password = :password", userLogin.Username, userLogin.Password).Scan(&isAuthentication)
-	database.DB.QueryRow("SELECT id from users where username = :username AND password = :passowrd", userLogin.Username, userLogin.Password).Scan(&id)
+	rows, err := db.Query("SELECT CASE WHEN COUNT(*) > 0 THEN 'true' ELSE 'false' END FROM users WHERE username = $1 AND password = $2", userLogin.Username, userLogin.Password)
+	if err != nil {
+		return 0, false
+	}
+
+	defer rows.Close()
+
+	if rows.Next() {
+		err = rows.Scan(&isAuthentication)
+		if err != nil {
+			return 0, false
+		}
+	}
+
+	rows, err = db.Query("SELECT id from users where username = $1 AND password = $2", userLogin.Username, userLogin.Password)
+	if err != nil {
+		return 0, false
+	}
+
+	defer rows.Close()
+
+	if rows.Next() {
+		err = rows.Scan(&id)
+		if err != nil {
+			return 0, false
+		}
+	}
 	return id, isAuthentication
 }
 
-func RegisterUser(userRegister models.RegisterParam) bool {
-	_, err := database.DB.Exec("INSERT INTO users (username, password, email) VALUES (:username, :password, :email)", userRegister)
-
+func RegisterUser(userRegister models.RegisterParam) error {
+	_, err := db.NamedExec("INSERT INTO users (username, email, password) VALUES (:username, :email, :password)", userRegister)
 	if err != nil {
-		log.Fatal(err)
-		return false
+		return err
 	}
-
-	return true
+	return nil
 }

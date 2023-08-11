@@ -8,4 +8,6 @@ type Content struct {
 	Content_post string `json:"content" db:"content"`
 	Created_at   string `json:"created_at" db:"created_at"`
 	Modified_at  string `json:"modified_at" db:"modified_at"`
+	Created_by   string `json:"created_by" db:"created_by"`
+	Modified_by  string `json:"modified_by" db:"modified_by"`
 }
