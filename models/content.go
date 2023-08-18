@@ -7,7 +7,7 @@ type Content struct {
 	Title        string `json:"title" db:"title"`
 	Content_post string `json:"content" db:"content"`
 	Created_at   string `json:"created_at" db:"created_at"`
-	Modified_at  string `json:"modified_at" db:"modified_at"`
+	Modified_at  string `json:"updated_at" db:"updated_at"`
 	Created_by   string `json:"created_by" db:"created_by"`
 	Modified_by  string `json:"modified_by" db:"modified_by"`
 }
