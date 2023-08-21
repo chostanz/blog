@@ -5,8 +5,6 @@ import (
 	"blog/service"
 	"blog/utils"
 	"net/http"
-	"strconv"
-	"time"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/golang-jwt/jwt/v5"
@@ -18,7 +16,7 @@ type TokenCheck struct {
 }
 
 type JwtCustomClaims struct {
-	IdUser string `json:"id_user"`
+	IdUser int `json:"id_user"`
 	jwt.RegisteredClaims
 }
 
@@ -38,7 +36,7 @@ func Login(c echo.Context) error {
 		})
 	}
 
-	idUser, isAuthentication := service.CheckCredential(loginbody)
+	userId, isAuthentication := service.CheckCredential(loginbody)
 
 	if !isAuthentication {
 		return c.JSON(http.StatusUnauthorized, &models.LoginResp{
@@ -47,10 +45,7 @@ func Login(c echo.Context) error {
 		})
 	}
 	claims := &JwtCustomClaims{
-		strconv.Itoa(idUser),
-		jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24)),
-		},
+		IdUser: userId,
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
