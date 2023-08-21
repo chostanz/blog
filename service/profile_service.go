@@ -25,7 +25,7 @@ func GetProfile(id int) (models.Profile, error) {
 	var userProfile models.Profile
 	idStr := strconv.Itoa(id)
 
-	err := db.Get(&userProfile, "SELECT name, bio, picture_url FROM users WHERE id = $1", idStr)
+	err := db.Get(&userProfile, "SELECT id, name, bio, picture_url FROM users WHERE id = $1", idStr)
 	if err != nil {
 		return models.Profile{}, err
 	}

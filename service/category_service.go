@@ -22,13 +22,25 @@ func AllCategory() ([]models.Kategori, error) {
 
 }
 
-func Category(id int) (models.Kategori, error) {
-	var specCategory models.Kategori
+func Category(id int) (models.SpecCategory, error) {
+	var specCategory models.SpecCategory
 	idStr := strconv.Itoa(id)
 
-	err := db.Get(&specCategory, "SELECT * FROM categories WHERE id = $1", idStr)
+	err := db.Get(&specCategory, "SELECT c.category, co.id, co.title, co.content, co.created_at, co.modified_at, co.created_by, co.modified_by FROM categories c JOIN contents co ON c.id = co.category_id WHERE c.id = $1", idStr)
+	//if err != nil {
+	// 	return models.Kategori{}, err
+	// }
+	// return specCategory, nil
+	// query := `
+	// 	SELECT c.category, co.id, co.title, co.content, co.created_at, co.modified_at, co.created_by, co.modified_by
+	// 	FROM categories c
+	// 	JOIN contents co ON c.id = co.category_id
+	// 	WHERE c.id = $1
+	// `
+
+	// err := db.Get(&specCategory, idStr)
 	if err != nil {
-		return models.Kategori{}, err
+		return models.SpecCategory{}, err
 	}
 	return specCategory, nil
 }
@@ -39,4 +51,28 @@ func CreateCategory(createCategory models.Kategori) error {
 		return err
 	}
 	return nil
+}
+
+func EditCategory(editCategory models.Kategori, id int) (models.Kategori, error) {
+	idStr := strconv.Itoa(id)
+
+	_, err := db.NamedExec("UPDATE categories SET category = :category WHERE id = :id", map[string]interface{}{
+		"category": editCategory.Category,
+		"id":       idStr,
+	})
+
+	if err != nil {
+		return models.Kategori{}, err
+	}
+	return editCategory, nil
+}
+
+func DeleteCategory(deleteCategory models.Kategori, id int) (models.Kategori, error) {
+	idStr := strconv.Itoa(id)
+
+	_, err := db.Exec("Delete from categories where id = $1", idStr)
+	if err != nil {
+		return models.Kategori{}, err
+	}
+	return deleteCategory, nil
 }

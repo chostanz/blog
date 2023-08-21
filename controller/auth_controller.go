@@ -5,10 +5,22 @@ import (
 	"blog/service"
 	"blog/utils"
 	"net/http"
+	"strconv"
+	"time"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 )
+
+type TokenCheck struct {
+	Token string `json:"token"`
+}
+
+type JwtCustomClaims struct {
+	IdUser string `json:"id_user"`
+	jwt.RegisteredClaims
+}
 
 func Login(c echo.Context) error {
 	e := echo.New()
@@ -25,7 +37,8 @@ func Login(c echo.Context) error {
 			Status:  false,
 		})
 	}
-	_, isAuthentication := service.CheckCredential(loginbody)
+
+	idUser, isAuthentication := service.CheckCredential(loginbody)
 
 	if !isAuthentication {
 		return c.JSON(http.StatusUnauthorized, &models.LoginResp{
@@ -33,15 +46,26 @@ func Login(c echo.Context) error {
 			Status:  false,
 		})
 	}
+	claims := &JwtCustomClaims{
+		strconv.Itoa(idUser),
+		jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24)),
+		},
+	}
 
-	return c.JSON(http.StatusOK, &models.LoginResp{
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	t, _ := token.SignedString([]byte("secret"))
+
+	return c.JSON(http.StatusOK, &models.AuthResp{
 		Message: "Berhasil login",
 		Status:  true,
+		Token:   t,
 	})
 
 }
 
-func Register(c echo.Context) error {
+func RegisterReader(c echo.Context) error {
 	e := echo.New()
 	e.Validator = &utils.CustomValidator{Validator: validator.New()}
 
@@ -51,7 +75,7 @@ func Register(c echo.Context) error {
 	err := c.Validate(&userRegister)
 
 	if err == nil {
-		registerErr := service.RegisterUser(userRegister)
+		registerErr := service.RegisterReader(userRegister)
 		if registerErr != nil {
 
 			return echo.NewHTTPError(http.StatusBadRequest, "Username telah digunakan!")
@@ -66,24 +90,27 @@ func Register(c echo.Context) error {
 
 }
 
-// func Register(c echo.Context) error {
-// 	e := echo.New()
-// 	e.Validator = &utils.CustomValidator{Validator: validator.New()}
+func RegisterAuthor(c echo.Context) error {
+	e := echo.New()
+	e.Validator = &utils.CustomValidator{Validator: validator.New()}
 
-// 	var userRegister models.RegisterParam
+	var userRegister models.RegisterParam
 
-// 	if err := c.Bind(&userRegister); err != nil {
-// 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-// 	}
+	c.Bind(&userRegister)
+	err := c.Validate(&userRegister)
 
-// 	if err := c.Validate(&userRegister); err != nil {
-// 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-// 	}
+	if err == nil {
+		registerErr := service.RegisterAuthor(userRegister)
+		if registerErr != nil {
 
-// 	service.RegisterUser(userRegister)
+			return echo.NewHTTPError(http.StatusBadRequest, "Username telah digunakan!")
+		}
+		return c.JSON(http.StatusCreated, &models.RegisterResp{
+			Message: "Berhasil register",
+			Status:  true,
+		})
+	}
 
-// 	return c.JSON(http.StatusCreated, &models.RegisterResp{
-// 		Message: "Berhasil register",
-// 		Status:  true,
-// 	})
-// }
+	return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+
+}

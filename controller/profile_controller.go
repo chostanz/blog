@@ -52,7 +52,7 @@ func GetSpecProfile(c echo.Context) error {
 
 	userProfile, err := service.GetProfile(id)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return echo.NewHTTPError(http.StatusInternalServerError, "tidak ada")
 	}
 	return c.JSON(http.StatusOK, userProfile)
 }

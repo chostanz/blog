@@ -14,3 +14,9 @@ type Response struct {
 	Message string `json:"message"`
 	Status  bool   `json:"status"`
 }
+
+type AuthResp struct {
+	Message string `json:"message"`
+	Status  bool   `json:"status"`
+	Token   string `json:"token"`
+}

@@ -43,10 +43,44 @@ func CheckCredential(userLogin models.LoginParam) (int, bool) {
 	return id, isAuthentication
 }
 
-func RegisterUser(userRegister models.RegisterParam) error {
+func RegisterReader(userRegister models.RegisterParam) error {
 	_, err := db.NamedExec("INSERT INTO users (username, email, password) VALUES (:username, :email, :password)", userRegister)
 	if err != nil {
 		return err
 	}
+
+	var userID int
+	err = db.Get(&userID, "SELECT id FROM users WHERE username = $1", userRegister.Username)
+	if err != nil {
+		return err
+	}
+
+	// Insert into users_roles table with default role_id
+	_, err = db.Exec("INSERT INTO users_roles (role_id, user_id) VALUES ($1, $2)", 3, userID) // 3 is the default role_id for 'reader'
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func RegisterAuthor(userRegister models.RegisterParam) error {
+	_, err := db.NamedExec("INSERT INTO users (username, email, password) VALUES (:username, :email, :password)", userRegister)
+	if err != nil {
+		return err
+	}
+
+	var userID int
+	err = db.Get(&userID, "SELECT id FROM users WHERE username = $1", userRegister.Username)
+	if err != nil {
+		return err
+	}
+
+	// Insert into users_roles table with default role_id
+	_, err = db.Exec("INSERT INTO users_roles (role_id, user_id) VALUES ($1, $2)", 2, userID) // 3 is the default role_id for 'reader'
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

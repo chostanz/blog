@@ -15,7 +15,7 @@ func GetAllCategory(c echo.Context) error {
 	category, err := service.AllCategory()
 	if err != nil {
 		response := models.Response{
-			Message: "Raono woy",
+			Message: "Halaman tidak ditemukan atau url salah",
 			Status:  false,
 		}
 		return c.JSON(http.StatusNotFound, response)
@@ -26,11 +26,13 @@ func GetAllCategory(c echo.Context) error {
 
 func GetSpecCategory(c echo.Context) error {
 	id, _ := strconv.Atoi(c.Param("id"))
-	var getCategory models.Kategori
+	var getCategory models.SpecCategory
 
 	getCategory, err := service.Category(id)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return echo.NewHTTPError(http.StatusNotFound, &models.Response{
+			Message: "Kategori tidak ditemukan",
+		})
 	}
 
 	return c.JSON(http.StatusOK, getCategory)
@@ -46,15 +48,46 @@ func CategoryAdd(c echo.Context) error {
 	err := c.Validate(&createCategory)
 
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, "Tidak ditemukan")
+		return c.JSON(http.StatusBadRequest, "Data yang dimasukkan tidak valid")
 
 	}
 	err = service.CreateCategory(createCategory) // Memanggil fungsi CreateCategory dari service
 
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, "Gagal menambahkan kategori")
+		return c.JSON(http.StatusBadRequest, "Gagal menambahkan kategori")
 	}
 
-	return c.JSON(http.StatusOK, "ok")
+	return c.JSON(http.StatusOK, "Berhasil menambahkan kategori")
 
+}
+
+func CategoryUpdate(c echo.Context) error {
+	id, _ := strconv.Atoi(c.Param("id"))
+
+	var editCategory models.Kategori
+
+	c.Bind(&editCategory)
+	err := c.Validate(&editCategory)
+
+	if err == nil {
+		_, updateErr := service.EditCategory(editCategory, id)
+		if updateErr != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, "data belum dimasukkan")
+		}
+	}
+	return c.JSON(http.StatusOK, &models.Response{
+		Message: "Berhasil update",
+		Status:  true,
+	})
+}
+
+func CategoryDelete(c echo.Context) error {
+	id, _ := strconv.Atoi(c.Param("id"))
+
+	var deleteCategory models.Kategori
+	_, err := service.DeleteCategory(deleteCategory, id)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, "okee")
 }
