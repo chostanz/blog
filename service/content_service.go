@@ -3,6 +3,8 @@ package service
 import (
 	"blog/models"
 	"strconv"
+
+	"github.com/golang-jwt/jwt"
 )
 
 func ContentAll() ([]models.Content, error) {
@@ -32,4 +34,33 @@ func Content(id int) (models.Content, error) {
 	}
 	return specContent, nil
 
+}
+
+func GetAuthorID(tokenStr string) (int, error) {
+	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+		return []byte("kuncisecret"), nil
+	})
+
+	if err != nil {
+		return 0, err
+	}
+
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		authorID := int(claims["author_id"].(float64))
+		return authorID, nil
+	}
+
+	return 0, err
+}
+
+func CreateContent(createContent models.Content, tokenStr string) error {
+	authorID, err := GetAuthorID(tokenStr)
+	if err != nil {
+		return err
+	}
+	_, errInsert := db.Exec("INSERT into content (author_id, title, content) VALUES ($1, $2, $3)", authorID, createContent.Title, createContent.Content_post)
+	if errInsert != nil {
+		return err
+	}
+	return nil
 }

@@ -9,13 +9,14 @@ import (
 
 var db *sqlx.DB = database.Koneksi()
 
-func CheckCredential(userLogin models.LoginParam) (int, bool) {
+func CheckCredential(userLogin models.LoginParam) (int, bool, int, error) {
 	var isAuthentication bool
 	var id int
+	var roleID int
 
 	rows, err := db.Query("SELECT CASE WHEN COUNT(*) > 0 THEN 'true' ELSE 'false' END FROM users WHERE username = $1 AND password = $2", userLogin.Username, userLogin.Password)
 	if err != nil {
-		return 0, false
+		return 0, false, 0, err
 	}
 
 	defer rows.Close()
@@ -23,13 +24,13 @@ func CheckCredential(userLogin models.LoginParam) (int, bool) {
 	if rows.Next() {
 		err = rows.Scan(&isAuthentication)
 		if err != nil {
-			return 0, false
+			return 0, false, 0, err
 		}
 	}
 
 	rows, err = db.Query("SELECT id from users where username = $1 AND password = $2", userLogin.Username, userLogin.Password)
 	if err != nil {
-		return 0, false
+		return 0, false, 0, err
 	}
 
 	defer rows.Close()
@@ -37,10 +38,24 @@ func CheckCredential(userLogin models.LoginParam) (int, bool) {
 	if rows.Next() {
 		err = rows.Scan(&id)
 		if err != nil {
-			return 0, false
+			return 0, false, 0, err
 		}
 	}
-	return id, isAuthentication
+
+	rows, err = db.Query("SELECT role_id FROM users_roles WHERE user_id = $1", id)
+	if err != nil {
+		return 0, false, 0, err
+	}
+	defer rows.Close()
+
+	if rows.Next() {
+		err = rows.Scan(&roleID)
+		if err != nil {
+			return 0, false, 0, err
+		}
+	}
+	return id, isAuthentication, roleID, nil
+
 }
 
 func RegisterReader(userRegister models.RegisterParam) error {

@@ -16,7 +16,9 @@ type TokenCheck struct {
 }
 
 type JwtCustomClaims struct {
-	IdUser int `json:"id_user"`
+	IdUser   int `json:"id_user"`
+	IdRole   int `json:"id_role"`
+	IdAuthor int `json:"author_id"`
 	jwt.RegisteredClaims
 }
 
@@ -36,7 +38,7 @@ func Login(c echo.Context) error {
 		})
 	}
 
-	userId, isAuthentication := service.CheckCredential(loginbody)
+	userId, isAuthentication, roleID, _ := service.CheckCredential(loginbody)
 
 	if !isAuthentication {
 		return c.JSON(http.StatusUnauthorized, &models.LoginResp{
@@ -46,6 +48,7 @@ func Login(c echo.Context) error {
 	}
 	claims := &JwtCustomClaims{
 		IdUser: userId,
+		IdRole: roleID,
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
