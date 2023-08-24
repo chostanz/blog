@@ -12,12 +12,12 @@ func Route() *echo.Echo {
 	r := echo.New()
 	r.Validator = &utils.CustomValidator{Validator: validator.New()}
 
-	authGroup := r.Group("/auth")
-	authGroup.Use(AuthMiddleware)
+	// authGroup := r.Group("/auth")
+	// authGroup.Use(AuthMiddleware)
 
-	// Rute untuk mendapatkan profil berdasarkan id_user
-	authGroup.GET("/profile/:id", controller.GetSpecProfile)
-	// Kelompok rute yang memerlukan Basic Authentication
+	// // Rute untuk mendapatkan profil berdasarkan id_user
+	// authGroup.GET("/profile/:id", controller.GetSpecProfile)
+	// // Kelompok rute yang memerlukan Basic Authentication
 	authorGroup := r.Group("/author")
 	authorGroup.Use(AuthorMiddleware)
 

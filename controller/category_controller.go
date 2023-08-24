@@ -47,6 +47,14 @@ func CategoryAdd(c echo.Context) error {
 
 	err := c.Validate(&createCategory)
 
+	// claims, err := middleware.GetClaims(c)
+	// if err != nil {
+	// 	return err
+	// }
+	// if claims["id_role"].(float64) != 1 {
+	// 	return c.JSON(http.StatusForbidden, "Access denied")
+	// }
+
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, "Data yang dimasukkan tidak valid")
 
@@ -91,3 +99,24 @@ func CategoryDelete(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, "okee")
 }
+
+// func DeleteCategory(c echo.Context) error {
+// 	userID := c.Get("id_user").(int)
+// 	categoryID := c.Param("category_id")
+
+// 	claims, err := middleware.GetClaims(c)
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	if claims["id_role"].(float64) != 1 {
+// 		return c.JSON(http.StatusForbidden, "Access denied")
+// 	}
+
+// 	_, err = service.DeleteCategory(categoryID, userID)
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	return c.JSON(http.StatusOK, "Category deleted successfully")
+// }

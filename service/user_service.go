@@ -9,7 +9,7 @@ import (
 func UsersAll() ([]models.Users, error) {
 	usersGet := []models.Users{}
 
-	rows, err := db.Queryx("SELECT u.id, u.username, u.email, r.role FROM users u JOIN users_roles ur ON u.id = ur.user_id JOIN roles r ON ur.role_id = r.id")
+	rows, err := db.Queryx("SELECT u.id, u.username, u.password, u.email, r.role FROM users u JOIN users_roles ur ON u.id = ur.user_id JOIN roles r ON ur.role_id = r.id")
 	if err != nil {
 		return nil, err
 	}

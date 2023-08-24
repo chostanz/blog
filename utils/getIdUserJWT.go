@@ -1,24 +1,21 @@
 package utils
 
 import (
-	"encoding/json"
-
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/labstack/echo/v4"
 )
 
 type JwtCustomClaims struct {
-	IdUser int `json:"id_user"`
+	IdUser string `json:"id_user"`
 	jwt.RegisteredClaims
 }
 
-func GetIdUserJWT(c echo.Context) int {
+// func GetIdUserJWT(c echo.Context) string {
 
-	claims := JwtCustomClaims{}
+// 	claims := JwtCustomClaims{}
 
-	user := c.Get("users").(*jwt.Token)
-	tmp, _ := json.Marshal(user.Claims)
-	_ = json.Unmarshal(tmp, &claims)
+// 	user := c.Get("users").(*jwt.Token)
+// 	tmp, _ := json.Marshal(user.Claims)
+// 	_ = json.Unmarshal(tmp, &claims)
 
-	return claims.IdUser
-}
+// 	return claims.IdUser
+// }

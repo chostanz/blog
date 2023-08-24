@@ -10,7 +10,7 @@ import (
 func ContentAll() ([]models.Content, error) {
 	contentGet := []models.Content{}
 
-	rows, err := db.Queryx("select * from content")
+	rows, err := db.Queryx("select * from contents")
 	if err != nil {
 		return nil, err
 	}
@@ -27,7 +27,7 @@ func Content(id int) (models.Content, error) {
 	var specContent models.Content
 	idStr := strconv.Itoa(id)
 
-	err := db.Get(&specContent, "SELECT * FROM content WHERE id = $1", idStr)
+	err := db.Get(&specContent, "SELECT * FROM contents WHERE id = $1", idStr)
 	if err != nil {
 		return models.Content{}, err
 	}
