@@ -16,7 +16,6 @@ func ContentAll() ([]models.Content, error) {
 	}
 
 	for rows.Next() {
-		//membuat var bru dari struct Karyawan yg nilai awalnya kosong
 		place := models.Content{}
 		rows.StructScan(&place)
 		contentGet = append(contentGet, place) //menambah elemen baru menggunakan append ke users

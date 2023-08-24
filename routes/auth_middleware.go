@@ -19,7 +19,6 @@ func AuthorMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		}
 
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-			// Ganti "rahasia" dengan kunci yang sesuai
 			return []byte("rahasia"), nil
 		})
 		if err != nil || !token.Valid {
@@ -49,7 +48,7 @@ func AuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		}
 
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-			return []byte("rahasia"), nil // Ganti dengan kunci Anda
+			return []byte("rahasia"), nil
 		})
 
 		if err != nil || !token.Valid {

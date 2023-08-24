@@ -50,5 +50,6 @@ func Route() *echo.Echo {
 	adminGroup.GET("/users", controller.GetAllUser)
 	adminGroup.PUT("/user/update/:id", controller.UserUpdate)
 	adminGroup.PUT("user/update-role/:id", controller.UserRoleUpdate)
+	adminGroup.DELETE("/user/delete/:id", controller.UserDelete)
 	return r
 }

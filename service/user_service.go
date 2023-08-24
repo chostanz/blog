@@ -100,3 +100,13 @@ func EditUserRole(userID int, roleID int) error {
 // 	err := db.Get(&roleID, "SELECT id FROM roles WHERE role = ?", roleName)
 // 	return roleID, err
 // }
+
+func DeleteUser(deleteUser models.Users, id int) (models.Users, error) {
+	idStr := strconv.Itoa(id)
+
+	_, err := db.Exec("DELETE FROM users WHERE id = $1", idStr)
+	if err != nil {
+		return deleteUser, err
+	}
+	return deleteUser, nil
+}

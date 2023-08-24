@@ -94,7 +94,7 @@ func UserUpdate(c echo.Context) error {
 // Controller untuk mengedit peran pengguna
 func UserRoleUpdate(c echo.Context) error {
 	userID, _ := strconv.Atoi(c.Param("id"))
-	roleID, _ := strconv.Atoi(c.Param("role_id")) // Anda bisa menggunakan c.FormValue jika role_id diteruskan melalui form data
+	roleID, _ := strconv.Atoi(c.Param("role_id"))
 
 	err := service.EditUserRole(userID, roleID)
 	if err != nil {
@@ -104,6 +104,21 @@ func UserRoleUpdate(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, &models.Response{
 		Message: "Berhasil update role",
+		Status:  true,
+	})
+}
+
+func UserDelete(c echo.Context) error {
+	id, err := strconv.Atoi(c.Param("id"))
+	var deleteUser models.Users
+	_, err = service.DeleteUser(deleteUser, id)
+
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "Terjadi kesalahan internal")
+
+	}
+	return c.JSON(http.StatusOK, &models.Response{
+		Message: "Berhasil meghapus user",
 		Status:  true,
 	})
 }
