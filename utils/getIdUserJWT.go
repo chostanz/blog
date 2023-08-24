@@ -8,11 +8,11 @@ import (
 )
 
 type JwtCustomClaims struct {
-	IdUser string `json:"id_user"`
+	IdUser int `json:"id_user"`
 	jwt.RegisteredClaims
 }
 
-func GetIdUserJWT(c echo.Context) string {
+func GetIdUserJWT(c echo.Context) int {
 
 	claims := JwtCustomClaims{}
 

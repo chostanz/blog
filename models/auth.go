@@ -3,7 +3,7 @@ package models
 type LoginParam struct {
 	Username string `json:"username" db:"username" validate:"required"`
 	Password string `json:"password" db:"password" validate:"required"`
-	Role     int    `json:"role_id" db:"role_id"`
+	Role     int    `json:"id_role" db:"role_id"`
 }
 
 type RegisterParam struct {

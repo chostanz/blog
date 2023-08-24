@@ -12,6 +12,11 @@ func Route() *echo.Echo {
 	r := echo.New()
 	r.Validator = &utils.CustomValidator{Validator: validator.New()}
 
+	authGroup := r.Group("/auth")
+	authGroup.Use(AuthMiddleware)
+
+	// Rute untuk mendapatkan profil berdasarkan id_user
+	authGroup.GET("/profile/:id", controller.GetSpecProfile)
 	// Kelompok rute yang memerlukan Basic Authentication
 	authorGroup := r.Group("/author")
 	authorGroup.Use(AuthorMiddleware)
@@ -20,8 +25,8 @@ func Route() *echo.Echo {
 	r.POST("/register-reader", controller.RegisterReader)
 	r.POST("/register-author", controller.RegisterAuthor)
 	//profile users
-	r.GET("/profile/:id", controller.GetSpecProfile)
-	r.PUT("/profile/update/:id", controller.ProfileUpdate)
+	// r.GET("/profile/:id", controller.GetSpecProfile)
+	// r.PUT("/profile/update/:id", controller.ProfileUpdate)
 
 	// all about contents
 	r.GET("/contents", controller.GetAllContent)

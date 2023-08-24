@@ -16,9 +16,8 @@ type TokenCheck struct {
 }
 
 type JwtCustomClaims struct {
-	IdUser   int `json:"id_user"`
-	IdRole   int `json:"id_role"`
-	IdAuthor int `json:"author_id"`
+	IdUser int `json:"id_user"`
+	IdRole int `json:"id_role"`
 	jwt.RegisteredClaims
 }
 
@@ -51,9 +50,17 @@ func Login(c echo.Context) error {
 		IdRole: roleID,
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	// token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	t, _ := token.SignedString([]byte("secret"))
+	// t, _ := token.SignedString([]byte("rahasia"))
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	t, err := token.SignedString([]byte("rahasia"))
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, &models.AuthResp{
+			Message: "Failed to create token",
+			Status:  false,
+		})
+	}
 
 	return c.JSON(http.StatusOK, &models.AuthResp{
 		Message: "Berhasil login",

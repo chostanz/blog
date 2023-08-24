@@ -38,7 +38,7 @@ func Content(id int) (models.Content, error) {
 
 func GetAuthorID(tokenStr string) (int, error) {
 	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
-		return []byte("kuncisecret"), nil
+		return []byte("rahasia"), nil
 	})
 
 	if err != nil {

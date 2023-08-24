@@ -46,11 +46,12 @@ func ProfileUpdate(c echo.Context) error {
 }
 
 func GetSpecProfile(c echo.Context) error {
-	id, _ := strconv.Atoi(c.Param("id"))
+	idUser := c.Get("id_user").(int) // Mengambil ID User dari konteks
 
 	var userProfile models.Profile
 
-	userProfile, err := service.GetProfile(id)
+	userProfile, err := service.GetProfile(idUser)
+
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "tidak ada")
 	}
