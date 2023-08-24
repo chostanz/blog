@@ -27,18 +27,6 @@ func Category(id int) (models.SpecCategory, error) {
 	idStr := strconv.Itoa(id)
 
 	err := db.Get(&specCategory, "SELECT c.category, co.id, co.title, co.content, co.created_at, co.modified_at, co.created_by, co.modified_by FROM categories c JOIN contents co ON c.id = co.category_id WHERE c.id = $1", idStr)
-	//if err != nil {
-	// 	return models.Kategori{}, err
-	// }
-	// return specCategory, nil
-	// query := `
-	// 	SELECT c.category, co.id, co.title, co.content, co.created_at, co.modified_at, co.created_by, co.modified_by
-	// 	FROM categories c
-	// 	JOIN contents co ON c.id = co.category_id
-	// 	WHERE c.id = $1
-	// `
-
-	// err := db.Get(&specCategory, idStr)
 	if err != nil {
 		return models.SpecCategory{}, err
 	}
