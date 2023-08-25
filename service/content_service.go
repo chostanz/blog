@@ -52,14 +52,49 @@ func GetAuthorID(tokenStr string) (int, error) {
 	return 0, err
 }
 
+func GetUsernameByID(userID int) (string, error) {
+	var username string
+	err := db.QueryRow("SELECT username FROM users WHERE id_user = $1", userID).Scan(&username)
+	if err != nil {
+		return "", err
+	}
+	return username, nil
+}
+
 func CreateContent(createContent models.Content, tokenStr string) error {
 	authorID, err := GetAuthorID(tokenStr)
 	if err != nil {
 		return err
 	}
-	_, errInsert := db.Exec("INSERT into content (author_id, title, content) VALUES ($1, $2, $3)", authorID, createContent.Title, createContent.Content_post)
+	_, errInsert := db.Exec("INSERT INTO contents (author_id, title, content, category_id) VALUES ($1, $2, $3, $4)", authorID, createContent.Title, createContent.Content_post, createContent.Category_id)
 	if errInsert != nil {
-		return err
+		return errInsert
 	}
 	return nil
+}
+func EditContent(editContent models.Content, id int) (models.Content, error) {
+	idStr := strconv.Itoa(id)
+
+	_, err := db.NamedExec("UPDATE contents SET title = :title, content = :content, category_id = :category_id, author_id = :author_id WHERE id = :id", map[string]interface{}{
+		"title":       editContent.Title,
+		"content":     editContent.Content_post,
+		"category_id": editContent.Category_id,
+		"author_id":   editContent.Author_id,
+		"id":          idStr,
+	})
+
+	if err != nil {
+		return models.Content{}, err
+	}
+	return editContent, nil
+}
+
+func DeleteContent(deleteContent models.Content, id int) (models.Content, error) {
+	idStr := strconv.Itoa(id)
+
+	_, err := db.Exec("Delete from contents where id = $1", idStr)
+	if err != nil {
+		return models.Content{}, err
+	}
+	return deleteContent, nil
 }

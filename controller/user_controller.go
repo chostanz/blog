@@ -109,9 +109,9 @@ func UserRoleUpdate(c echo.Context) error {
 }
 
 func UserDelete(c echo.Context) error {
-	id, err := strconv.Atoi(c.Param("id"))
+	id, _ := strconv.Atoi(c.Param("id"))
 	var deleteUser models.Users
-	_, err = service.DeleteUser(deleteUser, id)
+	_, err := service.DeleteUser(deleteUser, id)
 
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, "Terjadi kesalahan internal")

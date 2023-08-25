@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/labstack/echo/v4"
 )
@@ -73,10 +72,7 @@ func GetSpecContent(c echo.Context) error {
 
 func CreateContent(c echo.Context) error {
 	tokenStr := c.Request().Header.Get("Authorization")
-	//fmt.Println(tokenStr)
-	tokenSplit := strings.Split(tokenStr, " ")
-	fmt.Println("Token", tokenSplit)
-	tokenOnly := tokenSplit[1]
+	fmt.Println(tokenStr)
 	if tokenStr == "" {
 		return c.JSON(http.StatusUnauthorized, map[string]interface{}{"error": "Token not provided"})
 	}
@@ -86,7 +82,7 @@ func CreateContent(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": "Invalid data provided"})
 	}
 
-	authorID, err := service.GetAuthorID(tokenOnly)
+	authorID, err := service.GetAuthorID(tokenStr)
 	fmt.Println(authorID)
 	if err != nil {
 		return c.JSON(http.StatusUnauthorized, map[string]interface{}{"error": "Invalid or missing token"})

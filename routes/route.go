@@ -2,6 +2,7 @@ package routes
 
 import (
 	"blog/controller"
+	"blog/middleware"
 	"blog/utils"
 
 	"github.com/go-playground/validator/v10"
@@ -19,7 +20,10 @@ func Route() *echo.Echo {
 	// authGroup.GET("/profile/:id", controller.GetSpecProfile)
 	// // Kelompok rute yang memerlukan Basic Authentication
 	authorGroup := r.Group("/author")
-	authorGroup.Use(AuthorMiddleware)
+	authorGroup.Use(middleware.AuthorMiddleware)
+
+	authGroup := r.Group("/auth")
+	authGroup.Use(middleware.AuthMiddleware)
 
 	r.POST("/login", controller.Login)
 	r.POST("/register-reader", controller.RegisterReader)
@@ -31,20 +35,22 @@ func Route() *echo.Echo {
 	// all about contents
 	r.GET("/contents", controller.GetAllContent)
 	r.GET("/content/:id", controller.GetSpecContent)
-	r.POST("/content/create", controller.CreateContent)
+	authGroup.POST("/content/create", controller.CreateContent)
+	authorGroup.PUT("/content/update/:id", controller.ContentUpdate)
+	authorGroup.DELETE("/content/delete/:id", controller.ContentDelete)
 
 	//change password
-	r.PUT("/password/change/:id", controller.PasswordUpdate)
+	authorGroup.PUT("/password/change/:id", controller.PasswordUpdate)
+
 	r.GET("/categories", controller.GetAllCategory)
 
+	adminGroup := r.Group("/admin")
+	adminGroup.Use(middleware.AdminMiddleware)
 	//all about category
 	r.GET("/category/:id", controller.GetSpecCategory)
-	authorGroup.POST("/category/create", controller.CategoryAdd)
-	authorGroup.PUT("/category/update/:id", controller.CategoryUpdate)
-	authorGroup.DELETE("/category/delete/:id", controller.CategoryDelete)
-
-	adminGroup := r.Group("/admin")
-	adminGroup.Use(AdminMiddleware)
+	adminGroup.POST("/category/create", controller.CategoryAdd)
+	adminGroup.PUT("/category/update/:id", controller.CategoryUpdate)
+	adminGroup.DELETE("/category/delete/:id", controller.CategoryDelete)
 
 	//about admin permission to manage users
 	adminGroup.GET("/users", controller.GetAllUser)
