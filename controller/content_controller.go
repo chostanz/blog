@@ -3,11 +3,11 @@ package controller
 import (
 	"blog/models"
 	"blog/service"
-	"blog/utils"
+	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
-	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 )
 
@@ -44,31 +44,97 @@ func GetSpecContent(c echo.Context) error {
 
 }
 
+// func CreateContent(c echo.Context) error {
+// 	tokenStr := c.Request().Header.Get("Authorization")
+// 	if tokenStr == "" {
+// 		return c.JSON(http.StatusUnauthorized, "Token not provided")
+// 	}
+
+// 	e := echo.New()
+// 	e.Validator = &utils.CustomValidator{Validator: validator.New()}
+// 	var createContent models.Content
+
+// 	c.Bind(&createContent)
+
+// 	err := c.Validate(&createContent)
+
+// 	if err != nil {
+// 		return c.JSON(http.StatusBadRequest, "Data yang dimasukkan tidak valid")
+
+// 	}
+// 	_, errService := service.GetAuthorID(tokenStr)
+
+// 	if errService != nil {
+// 		return c.JSON(http.StatusBadRequest, "Gagal menambahkan konten")
+// 	}
+
+//		return c.JSON(http.StatusOK, "Berhasil menambahkan konten")
+//	}
+
 func CreateContent(c echo.Context) error {
 	tokenStr := c.Request().Header.Get("Authorization")
+	//fmt.Println(tokenStr)
+	tokenSplit := strings.Split(tokenStr, " ")
+	fmt.Println("Token", tokenSplit)
+	tokenOnly := tokenSplit[1]
 	if tokenStr == "" {
-		return c.JSON(http.StatusUnauthorized, "Token not provided")
+		return c.JSON(http.StatusUnauthorized, map[string]interface{}{"error": "Token not provided"})
 	}
 
-	e := echo.New()
-	e.Validator = &utils.CustomValidator{Validator: validator.New()}
 	var createContent models.Content
+	if err := c.Bind(&createContent); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": "Invalid data provided"})
+	}
 
-	c.Bind(&createContent)
-
-	err := c.Validate(&createContent)
-
+	authorID, err := service.GetAuthorID(tokenOnly)
+	fmt.Println(authorID)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, "Data yang dimasukkan tidak valid")
-
-	}
-	_, errService := service.GetAuthorID(tokenStr)
-
-	if errService != nil {
-		return c.JSON(http.StatusBadRequest, "Gagal menambahkan konten")
+		return c.JSON(http.StatusUnauthorized, map[string]interface{}{"error": "Invalid or missing token"})
 	}
 
-	return c.JSON(http.StatusOK, "Berhasil menambahkan konten")
+	username, err := service.GetUsernameByID(authorID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+	}
+
+	createContent.Author_id = authorID
+	createContent.Created_by = username
+
+	if err := service.CreateContent(createContent, tokenStr); err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": "Failed to create content"})
+	}
+
+	return c.JSON(http.StatusOK, map[string]interface{}{"message": "Content created successfully"})
+}
+
+func ContentUpdate(c echo.Context) error {
+	id, _ := strconv.Atoi(c.Param("id"))
+
+	var editContent models.Content
+
+	c.Bind(&editContent)
+	err := c.Validate(&editContent)
+
+	if err == nil {
+		_, updateErr := service.EditContent(editContent, id)
+		if updateErr != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, "data belum dimasukkan")
+		}
+	}
+	return c.JSON(http.StatusOK, &models.Response{
+		Message: "Berhasil update",
+		Status:  true,
+	})
+}
+func ContentDelete(c echo.Context) error {
+	id, _ := strconv.Atoi(c.Param("id"))
+
+	var deleteContent models.Content
+	_, err := service.DeleteContent(deleteContent, id)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, "okee")
 }
 
 // func CreateContent(c echo.Context) error {
