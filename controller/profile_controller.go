@@ -59,24 +59,47 @@ func GetSpecProfile(c echo.Context) error {
 }
 
 func PasswordUpdate(c echo.Context) error {
+	// id, _ := strconv.Atoi(c.Param("id"))
+
+	// var passUpdate models.ChangePasswordRequest
+	// c.Bind(&passUpdate)
+	// err := c.Validate(&passUpdate)
+
+	// if err == nil {
+	// 	errRegister := service.EditPassword(passUpdate, id)
+	// 	if errRegister != nil {
+
+	// 		return echo.NewHTTPError(http.StatusBadRequest, "Failed to update passwor")
+	// 	}
+	// 	return c.JSON(http.StatusCreated, &models.Response{
+	// 		Message: "Berhasil update",
+	// 		Status:  true,
+	// 	})
+	// }
+
+	// return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+
 	id, _ := strconv.Atoi(c.Param("id"))
 
-	var passUpdate models.Password
-	c.Bind(&passUpdate)
-	err := c.Validate(&passUpdate)
-
-	if err == nil {
-		_, registerErr := service.EditPassword(passUpdate, id)
-		if registerErr != nil {
-
-			return echo.NewHTTPError(http.StatusBadRequest, "raiso")
-		}
-		return c.JSON(http.StatusCreated, &models.Response{
-			Message: "Berhasil update",
-			Status:  true,
-		})
+	var passUpdate models.ChangePasswordRequest
+	if err := c.Bind(&passUpdate); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request data")
 	}
 
-	return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	if err := c.Validate(&passUpdate); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Validation error")
+	}
+
+	errS := service.EditPassword(c.Request().Context(), passUpdate, id)
+	if errS != nil {
+
+		// Handle other potential errors
+		return echo.NewHTTPError(http.StatusInternalServerError, "An error occurred")
+	}
+
+	return c.JSON(http.StatusOK, &models.Response{
+		Message: "Password updated successfully",
+		Status:  true,
+	})
 
 }

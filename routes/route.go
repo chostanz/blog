@@ -46,9 +46,12 @@ func Route() *echo.Echo {
 
 	adminGroup := r.Group("/admin")
 	adminGroup.Use(middleware.AdminMiddleware)
+	adminGroup.PUT("/password/change/:id", controller.PasswordUpdate)
+
 	//all about category
 	r.GET("/category/:id", controller.GetSpecCategory)
 	adminGroup.POST("/category/create", controller.CategoryAdd)
+	authorGroup.POST("/category/create", controller.CategoryAdd)
 	adminGroup.PUT("/category/update/:id", controller.CategoryUpdate)
 	adminGroup.DELETE("/category/delete/:id", controller.CategoryDelete)
 
@@ -57,5 +60,7 @@ func Route() *echo.Echo {
 	adminGroup.PUT("/user/update/:id", controller.UserUpdate)
 	adminGroup.PUT("user/update-role/:id", controller.UserRoleUpdate)
 	adminGroup.DELETE("/user/delete/:id", controller.UserDelete)
+
+	adminGroup.POST("/logout", controller.EchoHandleLogout)
 	return r
 }

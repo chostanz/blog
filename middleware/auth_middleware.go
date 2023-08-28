@@ -13,9 +13,10 @@ func AuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		tokenString := c.Request().Header.Get("Authorization")
 		tokenSplit := strings.Split(tokenString, " ")
-		fmt.Println("Token", tokenSplit)
 		tokenOnly := tokenSplit[1]
+		fmt.Println("Token", tokenOnly)
 		if tokenString == "" {
+			fmt.Println("Error: Token not provided") // Mencetak error
 			return c.JSON(http.StatusUnauthorized, "Missing token")
 		}
 
@@ -31,7 +32,13 @@ func AuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 			return c.JSON(http.StatusUnauthorized, "Invalid token claims")
 		}
 
+		// roleID := int(claims["id_user"].(float64))
+		// if roleID != 2 {
+		// 	return c.JSON(http.StatusForbidden, "Access denied")
+		// }
+		// c.Set("id_user", roleID) // Menyimpan ID User dalam konteks
 		c.Set("id_user", int(claims["id_user"].(float64))) // Menyimpan ID User dalam konteks
+
 		return next(c)
 	}
 }
@@ -40,7 +47,7 @@ func AdminMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		tokenString := c.Request().Header.Get("Authorization")
 		tokenSplit := strings.Split(tokenString, " ")
-		fmt.Println("Token", tokenSplit)
+		fmt.Println("Token:", tokenSplit)
 		tokenOnly := tokenSplit[1]
 		if tokenString == "" {
 			return c.JSON(http.StatusUnauthorized, "Missing token")
@@ -72,7 +79,7 @@ func AuthorMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		tokenString := c.Request().Header.Get("Authorization")
 		tokenSplit := strings.Split(tokenString, " ")
-		fmt.Println("Token", tokenSplit)
+		//fmt.Println("Token", tokenSplit)
 		tokenOnly := tokenSplit[1]
 		if tokenString == "" {
 			return c.JSON(http.StatusUnauthorized, "Missing token")

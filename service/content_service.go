@@ -43,18 +43,27 @@ func GetAuthorID(tokenStr string) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		authorID := int(claims["author_id"].(float64))
-		return authorID, nil
+		if customClaims, ok := claims["custom_claims"].(map[string]interface{}); ok {
+			if authorID, ok := customClaims["author_id"]; ok {
+				if id, ok := authorID.(float64); ok {
+					return int(id), nil
+				}
+			}
+		}
 	}
+
+	// if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+	// 	authorID := int(claims["author_id"].(float64))
+	// 	return authorID, nil
+	// }
 
 	return 0, err
 }
 
 func GetUsernameByID(userID int) (string, error) {
 	var username string
-	err := db.QueryRow("SELECT username FROM users WHERE id_user = $1", userID).Scan(&username)
+	err := db.QueryRow("SELECT username FROM users WHERE id = $1", userID).Scan(&username)
 	if err != nil {
 		return "", err
 	}
@@ -66,7 +75,18 @@ func CreateContent(createContent models.Content, tokenStr string) error {
 	if err != nil {
 		return err
 	}
-	_, errInsert := db.Exec("INSERT INTO contents (author_id, title, content, category_id) VALUES ($1, $2, $3, $4)", authorID, createContent.Title, createContent.Content_post, createContent.Category_id)
+
+	// Dapatkan username berdasarkan authorID
+	username, err := GetUsernameByID(authorID)
+	if err != nil {
+		return err
+	}
+
+	if err != nil {
+		return err
+	}
+	_, errInsert := db.Exec("INSERT INTO contents (author_id, title, content, category_id, created_by) VALUES ($1, $2, $3, $4, $5)", authorID, createContent.Title, createContent.Content_post, createContent.Category_id, username)
+
 	if errInsert != nil {
 		return errInsert
 	}

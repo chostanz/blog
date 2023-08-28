@@ -2,6 +2,7 @@ package service
 
 import (
 	"blog/models"
+	"fmt"
 	"strconv"
 )
 
@@ -27,9 +28,14 @@ func Category(id int) (models.SpecCategory, error) {
 	idStr := strconv.Itoa(id)
 
 	err := db.Get(&specCategory, "SELECT c.category, co.id, co.title, co.content, co.created_at, co.modified_at, co.created_by, co.modified_by FROM categories c JOIN contents co ON c.id = co.category_id WHERE c.id = $1", idStr)
+
 	if err != nil {
+		fmt.Println("Error fetching category with ID", idStr, ":", err)
+
+		fmt.Println("Error:", err)
 		return models.SpecCategory{}, err
 	}
+	fmt.Println("Fetched category:", specCategory.Category)
 	return specCategory, nil
 }
 

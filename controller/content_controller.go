@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 )
@@ -72,8 +73,12 @@ func GetSpecContent(c echo.Context) error {
 
 func CreateContent(c echo.Context) error {
 	tokenStr := c.Request().Header.Get("Authorization")
-	fmt.Println(tokenStr)
+	//fmt.Println(tokenStr)
+	tokenSplit := strings.Split(tokenStr, " ")
+	tokenOnly := tokenSplit[1]
 	if tokenStr == "" {
+		fmt.Println("Error: Token not provided") // Mencetak error
+
 		return c.JSON(http.StatusUnauthorized, map[string]interface{}{"error": "Token not provided"})
 	}
 
@@ -82,13 +87,16 @@ func CreateContent(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": "Invalid data provided"})
 	}
 
-	authorID, err := service.GetAuthorID(tokenStr)
+	authorID, err := service.GetAuthorID(tokenOnly)
 	fmt.Println(authorID)
 	if err != nil {
+		fmt.Println("Error:", err) // Mencetak error
+
 		return c.JSON(http.StatusUnauthorized, map[string]interface{}{"error": "Invalid or missing token"})
 	}
 
 	username, err := service.GetUsernameByID(authorID)
+
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 	}
@@ -96,7 +104,9 @@ func CreateContent(c echo.Context) error {
 	createContent.Author_id = authorID
 	createContent.Created_by = username
 
-	if err := service.CreateContent(createContent, tokenStr); err != nil {
+	if err := service.CreateContent(createContent, tokenOnly); err != nil {
+		fmt.Println("Error:", err) // Mencetak error
+
 		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": "Failed to create content"})
 	}
 

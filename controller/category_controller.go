@@ -4,6 +4,7 @@ import (
 	"blog/models"
 	"blog/service"
 	"blog/utils"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -26,16 +27,29 @@ func GetAllCategory(c echo.Context) error {
 
 func GetSpecCategory(c echo.Context) error {
 	id, _ := strconv.Atoi(c.Param("id"))
-	var getCategory models.SpecCategory
+	fmt.Println("Fetching category with ID:", id)
 
 	getCategory, err := service.Category(id)
 	if err != nil {
+		fmt.Println("Error:", err)
 		return echo.NewHTTPError(http.StatusNotFound, &models.Response{
 			Message: "Kategori tidak ditemukan",
 		})
 	}
 
+	fmt.Println("Category fetched successfully - ID:", getCategory.Id)
 	return c.JSON(http.StatusOK, getCategory)
+	// var getCategory models.SpecCategory
+
+	// getCategory, err := service.Category(id)
+	// if err != nil {
+	// 	fmt.Println("Error:", err)
+	// 	return echo.NewHTTPError(http.StatusNotFound, &models.Response{
+	// 		Message: "Kategori tidak ditemukan",
+	// 	})
+	// }
+
+	// return c.JSON(http.StatusOK, getCategory)
 }
 
 func CategoryAdd(c echo.Context) error {

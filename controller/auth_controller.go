@@ -5,10 +5,13 @@ import (
 	"blog/service"
 	"blog/utils"
 	"net/http"
+	"time"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/golang-jwt/jwt/v5"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/labstack/echo/v4"
+
+	_ "github.com/dgrijalva/jwt-go"
 )
 
 type TokenCheck struct {
@@ -16,9 +19,12 @@ type TokenCheck struct {
 }
 
 type JwtCustomClaims struct {
-	IdUser int `json:"id_user"`
-	IdRole int `json:"id_role"`
-	jwt.RegisteredClaims
+	IdUser       int                    `json:"id_user"`
+	IdRole       int                    `json:"id_role"`
+	CustomClaims map[string]interface{} `json:"custom_claims"`
+	// jwt.RegisteredClaims
+	jwt.StandardClaims // Embed the StandardClaims struct
+
 }
 
 func Login(c echo.Context) error {
@@ -37,7 +43,7 @@ func Login(c echo.Context) error {
 		})
 	}
 
-	userId, isAuthentication, roleID, _ := service.CheckCredential(loginbody)
+	userId, isAuthentication, roleID, authorID := service.CheckCredential(loginbody)
 
 	if !isAuthentication {
 		return c.JSON(http.StatusUnauthorized, &models.LoginResp{
@@ -48,6 +54,12 @@ func Login(c echo.Context) error {
 	claims := &JwtCustomClaims{
 		IdUser: userId,
 		IdRole: roleID,
+		CustomClaims: map[string]interface{}{
+			"author_id": authorID,
+		},
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: time.Now().Add(time.Minute * 15).Unix(), // Tambahkan waktu kadaluwarsa (1 hari)
+		},
 	}
 
 	// token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -118,4 +130,10 @@ func RegisterAuthor(c echo.Context) error {
 
 	return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 
+}
+
+func EchoHandleLogout(c echo.Context) error {
+	// Misalnya, Anda menghapus token dari sisi klien
+	// Dalam contoh ini, kita hanya mengembalikan pesan tanpa token
+	return c.String(http.StatusOK, "Logout berhasil")
 }

@@ -2,7 +2,11 @@ package service
 
 import (
 	"blog/models"
+	"context"
+	"errors"
 	"strconv"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 func EditProfile(UserProfile models.Profile, id int) (models.Profile, error) {
@@ -33,16 +37,34 @@ func GetProfile(id int) (models.Profile, error) {
 
 }
 
-func EditPassword(changePassword models.Password, id int) (models.Password, error) {
+func EditPassword(ctx context.Context, changePassword models.ChangePasswordRequest, id int) error {
 	idStr := strconv.Itoa(id)
 
-	_, err := db.NamedExec("UPDATE users SET password = :password WHERE id = :id", map[string]interface{}{
-		"password": changePassword.Password,
+	// Ambil password lama dari database
+	var dbPassword string
+	err := db.Get(&dbPassword, "SELECT password FROM users WHERE id = $1", id)
+	if err != nil {
+		return err
+	}
+
+	// Periksa apakah password lama sesuai dengan yang ada di database
+	if errBycript := bcrypt.CompareHashAndPassword([]byte(dbPassword), []byte(changePassword.OldPassword)); err != nil {
+		return errBycript
+	}
+
+	// Hash password baru sebelum menyimpannya
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(changePassword.NewPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+
+	_, errP := db.NamedExec("UPDATE users SET password = :password WHERE id = :id", map[string]interface{}{
+		"password": hashedPassword,
 		"id":       idStr,
 	})
 
-	if err != nil {
-		return models.Password{}, err
+	if errP != nil {
+		return errors.New("failed to update password")
 	}
-	return changePassword, nil
+	return nil
 }
