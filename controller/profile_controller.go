@@ -58,28 +58,57 @@ func GetSpecProfile(c echo.Context) error {
 	return c.JSON(http.StatusOK, userProfile)
 }
 
+// func PasswordUpdate(c echo.Context) error {
+// 	// id, _ := strconv.Atoi(c.Param("id"))
+
+// 	// var passUpdate models.ChangePasswordRequest
+// 	// c.Bind(&passUpdate)
+// 	// err := c.Validate(&passUpdate)
+
+// 	// if err == nil {
+// 	// 	errRegister := service.EditPassword(passUpdate, id)
+// 	// 	if errRegister != nil {
+
+// 	// 		return echo.NewHTTPError(http.StatusBadRequest, "Failed to update passwor")
+// 	// 	}
+// 	// 	return c.JSON(http.StatusCreated, &models.Response{
+// 	// 		Message: "Berhasil update",
+// 	// 		Status:  true,
+// 	// 	})
+// 	// }
+
+// 	// return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+
+// 	id, _ := strconv.Atoi(c.Param("id"))
+
+// 	var passUpdate models.ChangePasswordRequest
+// 	if err := c.Bind(&passUpdate); err != nil {
+// 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request data")
+// 	}
+
+// 	if err := c.Validate(&passUpdate); err != nil {
+// 		return echo.NewHTTPError(http.StatusBadRequest, "Validation error")
+// 	}
+
+// 	errS := service.EditPassword(c.Request().Context(), passUpdate, id)
+// 	if errS != nil {
+
+// 		// Handle other potential errors
+// 		return echo.NewHTTPError(http.StatusInternalServerError, "An error occurred")
+// 	}
+
+// 	return c.JSON(http.StatusOK, &models.Response{
+// 		Message: "Password updated successfully",
+// 		Status:  true,
+// 	})
+
+// }
+
 func PasswordUpdate(c echo.Context) error {
-	// id, _ := strconv.Atoi(c.Param("id"))
-
-	// var passUpdate models.ChangePasswordRequest
-	// c.Bind(&passUpdate)
-	// err := c.Validate(&passUpdate)
-
-	// if err == nil {
-	// 	errRegister := service.EditPassword(passUpdate, id)
-	// 	if errRegister != nil {
-
-	// 		return echo.NewHTTPError(http.StatusBadRequest, "Failed to update passwor")
-	// 	}
-	// 	return c.JSON(http.StatusCreated, &models.Response{
-	// 		Message: "Berhasil update",
-	// 		Status:  true,
-	// 	})
-	// }
-
-	// return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request data")
+	}
 
 	var passUpdate models.ChangePasswordRequest
 	if err := c.Bind(&passUpdate); err != nil {

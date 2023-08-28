@@ -40,7 +40,7 @@ func Route() *echo.Echo {
 	authorGroup.DELETE("/content/delete/:id", controller.ContentDelete)
 
 	//change password
-	authorGroup.PUT("/password/change/:id", controller.PasswordUpdate)
+	r.PUT("/password/change/:id", controller.PasswordUpdate)
 
 	r.GET("/categories", controller.GetAllCategory)
 
