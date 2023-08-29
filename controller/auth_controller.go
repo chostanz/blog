@@ -4,6 +4,7 @@ import (
 	"blog/models"
 	"blog/service"
 	"blog/utils"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -19,11 +20,10 @@ type TokenCheck struct {
 }
 
 type JwtCustomClaims struct {
-	IdUser       int                    `json:"id_user"`
-	IdRole       int                    `json:"id_role"`
-	CustomClaims map[string]interface{} `json:"custom_claims"`
-	// jwt.RegisteredClaims
-	jwt.StandardClaims // Embed the StandardClaims struct
+	IdUser             int                    `json:"id_user"`
+	IdRole             int                    `json:"id_role"`
+	CustomClaims       map[string]interface{} `json:"custom_claims"`
+	jwt.StandardClaims                        // Embed the StandardClaims struct
 
 }
 
@@ -45,7 +45,11 @@ func Login(c echo.Context) error {
 
 	userId, isAuthentication, roleID, authorID := service.CheckCredential(loginbody)
 
+	fmt.Println("isAuthentication:", isAuthentication)
+
 	if !isAuthentication {
+		fmt.Println("Authentication failed")
+
 		return c.JSON(http.StatusUnauthorized, &models.LoginResp{
 			Message: "Akun tidak ada atau password salah",
 			Status:  false,
@@ -58,13 +62,10 @@ func Login(c echo.Context) error {
 			"author_id": authorID,
 		},
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(time.Minute * 15).Unix(), // Tambahkan waktu kadaluwarsa (1 hari)
+			ExpiresAt: time.Now().Add(time.Minute * 15).Unix(), // Tambahkan waktu kadaluwarsa (15 menit)
 		},
 	}
 
-	// token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-
-	// t, _ := token.SignedString([]byte("rahasia"))
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	t, err := token.SignedString([]byte("rahasia"))
 	if err != nil {
@@ -133,7 +134,6 @@ func RegisterAuthor(c echo.Context) error {
 }
 
 func EchoHandleLogout(c echo.Context) error {
-	// Misalnya, Anda menghapus token dari sisi klien
-	// Dalam contoh ini, kita hanya mengembalikan pesan tanpa token
+	//mengembalikan pesan tanpa token
 	return c.String(http.StatusOK, "Logout berhasil")
 }

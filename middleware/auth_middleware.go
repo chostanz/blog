@@ -105,7 +105,6 @@ func AuthorMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		if roleID != 2 {
 			return c.JSON(http.StatusForbidden, "Access denied")
 		}
-
 		return next(c)
 	}
 }

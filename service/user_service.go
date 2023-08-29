@@ -21,7 +21,6 @@ func UsersAll() ([]models.Users, error) {
 	return usersGet, nil
 }
 
-// Service untuk mengedit data pengguna (users)
 func EditUser(editUser models.Users, id int) (models.Users, error) {
 	idStr := strconv.Itoa(id)
 
@@ -39,7 +38,6 @@ func EditUser(editUser models.Users, id int) (models.Users, error) {
 	return editUser, nil
 }
 
-// Service untuk mengedit peran pengguna (roles)
 func EditUserRole(userID int, roleID int) error {
 	idStr := strconv.Itoa(userID)
 	_, err := db.Exec("UPDATE users_roles SET role_id = $1 WHERE user_id = $2", roleID, idStr)
@@ -50,56 +48,6 @@ func EditUserRole(userID int, roleID int) error {
 
 	return nil
 }
-
-// func EditUser(editUser models.Users, id int) (models.Users, error) {
-// 	idStr := strconv.Itoa(id)
-
-// 	_, err := db.NamedExec("UPDATE users SET username = :username, email = :email, password = :password WHERE id = :id", map[string]interface{}{
-// 		"username": editUser.Username,
-// 		"password": editUser.Password,
-// 		"email":    editUser.Email,
-// 		"id":       idStr,
-// 	})
-// 	if err != nil {
-// 		fmt.Println("Error updating user:", err)
-// 		return models.Users{}, err
-// 	}
-// 	_, errRole := db.Exec("UPDATE users_roles SET role_id = ? WHERE user_id = ?", editUser.Role, id)
-
-//		if errRole != nil {
-//			return models.Users{}, errRole
-//		}
-//		return editUser, nil
-//	}
-// func EditUser(editUser models.Users, id int, roleID int) (models.Users, error) {
-// 	idStr := strconv.Itoa(id)
-
-// 	_, err := db.NamedExec("UPDATE users SET username = :username, email = :email, password = :password WHERE id = :id", map[string]interface{}{
-// 		"username": editUser.Username,
-// 		"password": editUser.Password,
-// 		"email":    editUser.Email,
-// 		"id":       idStr,
-// 	})
-// 	if err != nil {
-// 		fmt.Println("Error updating user:", err)
-// 		return models.Users{}, err
-// 	}
-
-// 	_, errRole := db.Exec("UPDATE users_roles SET role_id = $1 WHERE user_id = $2", roleID, id) // Menggunakan parameter $1 dan $2
-// 	if errRole != nil {
-// 		fmt.Println("Error updating user role:", errRole)
-// 		return models.Users{}, errRole
-// 	}
-
-// 	return editUser, nil
-// }
-
-// func getRoleIDByName(roleName string) (int, error) {
-// 	// Lakukan query ke tabel roles berdasarkan nama peran
-// 	var roleID int
-// 	err := db.Get(&roleID, "SELECT id FROM roles WHERE role = ?", roleName)
-// 	return roleID, err
-// }
 
 func DeleteUser(deleteUser models.Users, id int) (models.Users, error) {
 	idStr := strconv.Itoa(id)

@@ -52,12 +52,6 @@ func GetAuthorID(tokenStr string) (int, error) {
 			}
 		}
 	}
-
-	// if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-	// 	authorID := int(claims["author_id"].(float64))
-	// 	return authorID, nil
-	// }
-
 	return 0, err
 }
 
