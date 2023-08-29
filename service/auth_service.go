@@ -35,6 +35,19 @@ func CheckCredential(userLogin models.LoginParam) (int, bool, int, error) {
 
 	defer rows.Close()
 
+	// var dbPassword string
+	// if rows.Next() {
+	// 	err = rows.Scan(&dbPassword)
+	// 	if err != nil {
+	// 		return 0, false, 0, err
+	// 	}
+
+	// 	errBycript := bcrypt.CompareHashAndPassword([]byte(dbPassword), []byte(userLogin.Password))
+	// 	if errBycript != nil {
+	// 		return 0, false, 0, errBycript
+	// 	}
+	// }
+
 	if rows.Next() {
 		err = rows.Scan(&id)
 		if err != nil {
@@ -80,10 +93,22 @@ func RegisterReader(userRegister models.RegisterParam) error {
 }
 
 func RegisterAuthor(userRegister models.RegisterParam) error {
+	// hashedPassword, err := bcrypt.GenerateFromPassword([]byte(userRegister.Password), bcrypt.DefaultCost)
+	// if err != nil {
+	// 	return err
+	// }
 	_, err := db.NamedExec("INSERT INTO users (username, email, password) VALUES (:username, :email, :password)", userRegister)
 	if err != nil {
 		return err
 	}
+	// _, err = db.NamedExec("INSERT INTO users (username, email, password) VALUES (:username, :email, :password)", map[string]interface{}{
+	// 	"username": userRegister.Username,
+	// 	"email":    userRegister.Email,
+	// 	"password": string(hashedPassword),
+	// })
+	// if err != nil {
+	// 	return err
+	// }
 
 	var userID int
 	err = db.Get(&userID, "SELECT id FROM users WHERE username = $1", userRegister.Username)

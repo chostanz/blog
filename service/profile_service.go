@@ -4,6 +4,7 @@ import (
 	"blog/models"
 	"context"
 	"errors"
+	"fmt"
 	"strconv"
 
 	"golang.org/x/crypto/bcrypt"
@@ -51,6 +52,7 @@ func EditPassword(ctx context.Context, changePassword models.ChangePasswordReque
 	// Periksa apakah password lama sesuai dengan yang ada di database
 	errBycript := bcrypt.CompareHashAndPassword([]byte(dbPassword), []byte(changePassword.OldPassword))
 	if errBycript != nil {
+		fmt.Println("Error comparing old passwords:", errBycript) // Tambahkan ini
 		return errBycript
 	}
 
@@ -60,9 +62,11 @@ func EditPassword(ctx context.Context, changePassword models.ChangePasswordReque
 	}
 
 	// Hash password baru sebelum menyimpannya
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(changePassword.NewPassword), bcrypt.DefaultCost)
-	if err != nil {
-		return err
+	hashedPassword, errk := bcrypt.GenerateFromPassword([]byte(changePassword.NewPassword), bcrypt.DefaultCost)
+	if errk != nil {
+		fmt.Println("Error generating hashed password:", errk) // Tambahkan ini
+
+		return errk
 	}
 
 	_, errP := db.NamedExecContext(ctx, "UPDATE users SET password = :password WHERE id = :id", map[string]interface{}{
@@ -71,6 +75,7 @@ func EditPassword(ctx context.Context, changePassword models.ChangePasswordReque
 	})
 
 	if errP != nil {
+		fmt.Println("Error updating password in database:", errP) // Tambahkan ini
 		return errP
 	}
 	return nil

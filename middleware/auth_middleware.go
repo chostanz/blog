@@ -32,14 +32,18 @@ func AuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 			return c.JSON(http.StatusUnauthorized, "Invalid token claims")
 		}
 
-		// roleID := int(claims["id_user"].(float64))
-		// if roleID != 2 {
-		// 	return c.JSON(http.StatusForbidden, "Access denied")
-		// }
-		// c.Set("id_user", roleID) // Menyimpan ID User dalam konteks
-		c.Set("id_user", int(claims["id_user"].(float64))) // Menyimpan ID User dalam konteks
+		roleID := int(claims["id_role"].(float64))
+		fmt.Println("Role ID:", roleID) // Tambahkan log ini untuk memeriksa nilai roleID
 
-		return next(c)
+		if roleID == 1 || roleID == 2 {
+			fmt.Println("Access granted")
+			c.Set("id_user", int(claims["id_user"].(float64))) // Menyimpan ID User
+			return next(c)
+		} else {
+			fmt.Println("Access denied")
+			return c.JSON(http.StatusForbidden, "Access denied")
+		}
+
 	}
 }
 

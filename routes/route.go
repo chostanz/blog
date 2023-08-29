@@ -17,7 +17,6 @@ func Route() *echo.Echo {
 	// authGroup.Use(AuthMiddleware)
 
 	// // Rute untuk mendapatkan profil berdasarkan id_user
-	// authGroup.GET("/profile/:id", controller.GetSpecProfile)
 	// // Kelompok rute yang memerlukan Basic Authentication
 	authorGroup := r.Group("/author")
 	authorGroup.Use(middleware.AuthorMiddleware)
@@ -25,12 +24,15 @@ func Route() *echo.Echo {
 	authGroup := r.Group("/auth")
 	authGroup.Use(middleware.AuthMiddleware)
 
+	authGroup.GET("/profile", controller.GetSpecProfile)
+	authGroup.PUT("/profile/update", controller.ProfileUpdate)
+
 	r.POST("/login", controller.Login)
 	r.POST("/register-reader", controller.RegisterReader)
 	r.POST("/register-author", controller.RegisterAuthor)
 	//profile users
 	// r.GET("/profile/:id", controller.GetSpecProfile)
-	// r.PUT("/profile/update/:id", controller.ProfileUpdate)
+	r.PUT("/password/change/:id", controller.PasswordUpdate)
 
 	// all about contents
 	r.GET("/contents", controller.GetAllContent)
@@ -40,7 +42,6 @@ func Route() *echo.Echo {
 	authorGroup.DELETE("/content/delete/:id", controller.ContentDelete)
 
 	//change password
-	r.PUT("/password/change/:id", controller.PasswordUpdate)
 
 	r.GET("/categories", controller.GetAllCategory)
 

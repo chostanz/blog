@@ -10,14 +10,15 @@ import (
 )
 
 func ProfileUpdate(c echo.Context) error {
-	id, _ := strconv.Atoi(c.Param("id"))
+	//id, _ := strconv.Atoi(c.Param("id"))
+	idUser := c.Get("id_user").(int) // Mengambil ID User dari konteks
 
 	var UserProfile models.Profile
 	c.Bind(&UserProfile)
 	err := c.Validate(&UserProfile)
 
 	if err == nil {
-		_, registerErr := service.EditProfile(UserProfile, id)
+		_, registerErr := service.EditProfile(UserProfile, idUser)
 		if registerErr != nil {
 
 			return echo.NewHTTPError(http.StatusBadRequest, "raiso")
