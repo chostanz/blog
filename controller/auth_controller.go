@@ -27,6 +27,9 @@ type JwtCustomClaims struct {
 
 }
 
+// Simpan token yang tidak valid dalam bentuk set
+var InvalidTokens = make(map[string]struct{})
+
 func Login(c echo.Context) error {
 	e := echo.New()
 	e.Validator = &utils.CustomValidator{Validator: validator.New()}
@@ -134,6 +137,35 @@ func RegisterAuthor(c echo.Context) error {
 }
 
 func EchoHandleLogout(c echo.Context) error {
-	//mengembalikan pesan tanpa token
-	return c.String(http.StatusOK, "Logout berhasil")
+	// cookie := &http.Cookie{
+	// 	Name:   "rahasia",
+	// 	Value:  "",  // Mengosongkan value cookie
+	// 	Path:   "/", // path pengaturan cookie sebelumnya
+	// 	MaxAge: -1,  // atur MaxAge menjadi negatif untuk menghapus cookie
+	// }
+	// c.SetCookie(cookie)
+	// return c.String(http.StatusOK, "Logout berhasil")
+
+	// token := c.Get("users").(*jwt.Token)
+	// claims := token.Claims.(*JwtCustomClaims)
+	// invalidTokens[token.Raw] = struct{}{} // Tambahkan token ke dalam daftar yang tidak valid
+	// // Convert IdUser to string
+	// idUserStr := strconv.Itoa(claims.IdUser)
+	// return c.String(http.StatusOK, idUserStr)
+
+	token, ok := c.Get("users").(*jwt.Token)
+	InvalidTokens[token.Raw] = struct{}{}
+	if !ok {
+		return c.String(http.StatusBadRequest, "Invalid token in context")
+	}
+
+	_, ok = token.Claims.(jwt.MapClaims)
+	if !ok {
+		return c.String(http.StatusUnauthorized, "Invalid token claims")
+	}
+
+	//invalidTokens[token.Raw] = struct{}{}
+
+	return c.String(http.StatusOK, "Logged out for user ")
+
 }

@@ -1,11 +1,13 @@
 package middleware
 
 import (
+	"blog/controller"
 	"fmt"
 	"net/http"
+	"reflect"
 	"strings"
 
-	"github.com/golang-jwt/jwt/v5"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/labstack/echo/v4"
 )
 
@@ -67,8 +69,18 @@ func AdminMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 
 		claims, ok := token.Claims.(jwt.MapClaims)
 		if !ok {
-			return c.JSON(http.StatusUnauthorized, "Invalid token claims")
+			fmt.Println("Tipe asli dari token.Claims:", reflect.TypeOf(token.Claims))
+			return c.JSON(http.StatusUnauthorized, "Klaim token tidak valid")
 		}
+
+		fmt.Println(claims)
+
+		// Check if the token is in the invalidTokens list
+		if _, exists := controller.InvalidTokens[token.Raw]; exists {
+			return c.JSON(http.StatusUnauthorized, "Sesi berakhir! Silahkan login kembali")
+		}
+
+		c.Set("users", token)
 
 		roleID := int(claims["id_role"].(float64))
 		if roleID != 1 {
@@ -100,6 +112,11 @@ func AuthorMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		if !ok {
 			return c.JSON(http.StatusUnauthorized, "Invalid token claims")
 		}
+		if _, exists := controller.InvalidTokens[token.Raw]; exists {
+			return c.JSON(http.StatusUnauthorized, "Sesi berakhir! Silahkan login kembali")
+		}
+
+		c.Set("users", token)
 
 		roleID := int(claims["id_role"].(float64))
 		if roleID != 2 {

@@ -63,5 +63,6 @@ func Route() *echo.Echo {
 	adminGroup.DELETE("/user/delete/:id", controller.UserDelete)
 
 	adminGroup.POST("/logout", controller.EchoHandleLogout)
+	authorGroup.POST("/logout", controller.EchoHandleLogout)
 	return r
 }
