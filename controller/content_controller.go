@@ -3,7 +3,6 @@ package controller
 import (
 	"blog/models"
 	"blog/service"
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -73,13 +72,16 @@ func GetSpecContent(c echo.Context) error {
 
 func CreateContent(c echo.Context) error {
 	tokenStr := c.Request().Header.Get("Authorization")
-	//fmt.Println(tokenStr)
 	tokenSplit := strings.Split(tokenStr, " ")
 	tokenOnly := tokenSplit[1]
-	if tokenStr == "" {
-		fmt.Println("Error: Token not provided") // Mencetak error
 
+	if tokenStr == "" {
 		return c.JSON(http.StatusUnauthorized, map[string]interface{}{"error": "Token not provided"})
+	}
+	authorID := c.Get("author_id").(int)
+	_, err := service.GetAuthorInfoFromToken(tokenOnly)
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, map[string]interface{}{"error": "Invalid or missing token"})
 	}
 
 	var createContent models.Content
@@ -87,30 +89,13 @@ func CreateContent(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": "Invalid data provided"})
 	}
 
-	authorID, err := service.GetAuthorID(tokenOnly)
-	fmt.Println(authorID)
+	err = service.CreateContent(createContent, authorID)
 	if err != nil {
-		fmt.Println("Error:", err) // Mencetak error
-
-		return c.JSON(http.StatusUnauthorized, map[string]interface{}{"error": "Invalid or missing token"})
-	}
-
-	username, err := service.GetUsernameByID(authorID)
-
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
-	}
-
-	createContent.Author_id = authorID
-	createContent.Created_by = username
-
-	if err := service.CreateContent(createContent, tokenOnly); err != nil {
-		fmt.Println("Error:", err) // Mencetak error
-
 		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": "Failed to create content"})
 	}
 
 	return c.JSON(http.StatusOK, map[string]interface{}{"message": "Content created successfully"})
+
 }
 
 func ContentUpdate(c echo.Context) error {
@@ -142,36 +127,3 @@ func ContentDelete(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, "okee")
 }
-
-// func CreateContent(c echo.Context) error {
-// 	tokenStr := c.Request().Header.Get("Authorization")
-// 	if tokenStr == "" {
-// 		return c.JSON(http.StatusUnauthorized, "Token not provided")
-// 	}
-
-// 	// Memvalidasi token
-// 	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
-// 		return []byte("rahasia"), nil
-// 	})
-// 	if err == nil {
-// 		return c.JSON(http.StatusUnauthorized, "Invalid token")
-// 	}
-
-// 	// Mengambil payload dari token
-// 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-// 		// Menggunakan informasi dari payload, seperti user ID
-// 		IdUser := int(claims["id_user"].(float64))
-// 		contentData := models.Content{
-// 			Author_id: IdUser,
-// 		}
-
-// 		errService := service.CreateContent(contentData, tokenStr)
-
-// 		if errService != nil {
-// 			return c.JSON(http.StatusBadRequest, "Gagal menambahkan konten")
-// 		}
-// 		return c.JSON(http.StatusOK, "Content created successfully")
-// 	}
-
-// 	return c.JSON(http.StatusUnauthorized, "Invalid token")
-// }

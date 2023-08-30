@@ -2,6 +2,7 @@ package service
 
 import (
 	"blog/models"
+	"errors"
 	"strconv"
 
 	"github.com/golang-jwt/jwt"
@@ -35,26 +36,6 @@ func Content(id int) (models.Content, error) {
 
 }
 
-func GetAuthorID(tokenStr string) (int, error) {
-	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
-		return []byte("rahasia"), nil
-	})
-
-	if err != nil {
-		return 0, err
-	}
-	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		if customClaims, ok := claims["custom_claims"].(map[string]interface{}); ok {
-			if authorID, ok := customClaims["author_id"]; ok {
-				if id, ok := authorID.(float64); ok {
-					return int(id), nil
-				}
-			}
-		}
-	}
-	return 0, err
-}
-
 func GetUsernameByID(userID int) (string, error) {
 	var username string
 	err := db.QueryRow("SELECT username FROM users WHERE id = $1", userID).Scan(&username)
@@ -63,19 +44,26 @@ func GetUsernameByID(userID int) (string, error) {
 	}
 	return username, nil
 }
-
-func CreateContent(createContent models.Content, tokenStr string) error {
-	authorID, err := GetAuthorID(tokenStr)
-	if err != nil {
-		return err
+func GetAuthorInfoFromToken(tokenStr string) (int, error) {
+	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+		return []byte("rahasia"), nil
+	})
+	if err != nil || !token.Valid {
+		return 0, err
 	}
 
-	// Dapatkan username berdasarkan authorID
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return 0, errors.New("Invalid token claims")
+	}
+
+	authorID := int(claims["id_user"].(float64))
+
+	return authorID, nil
+}
+
+func CreateContent(createContent models.Content, authorID int) error {
 	username, err := GetUsernameByID(authorID)
-	if err != nil {
-		return err
-	}
-
 	if err != nil {
 		return err
 	}
@@ -86,6 +74,7 @@ func CreateContent(createContent models.Content, tokenStr string) error {
 	}
 	return nil
 }
+
 func EditContent(editContent models.Content, id int) (models.Content, error) {
 	idStr := strconv.Itoa(id)
 

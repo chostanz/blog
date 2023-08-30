@@ -115,6 +115,8 @@ func AuthorMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		if _, exists := controller.InvalidTokens[token.Raw]; exists {
 			return c.JSON(http.StatusUnauthorized, "Sesi berakhir! Silahkan login kembali")
 		}
+		authorID := int(claims["id_user"].(float64))
+		c.Set("author_id", authorID)
 
 		c.Set("users", token)
 
