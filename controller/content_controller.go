@@ -43,33 +43,6 @@ func GetSpecContent(c echo.Context) error {
 
 }
 
-// func CreateContent(c echo.Context) error {
-// 	tokenStr := c.Request().Header.Get("Authorization")
-// 	if tokenStr == "" {
-// 		return c.JSON(http.StatusUnauthorized, "Token not provided")
-// 	}
-
-// 	e := echo.New()
-// 	e.Validator = &utils.CustomValidator{Validator: validator.New()}
-// 	var createContent models.Content
-
-// 	c.Bind(&createContent)
-
-// 	err := c.Validate(&createContent)
-
-// 	if err != nil {
-// 		return c.JSON(http.StatusBadRequest, "Data yang dimasukkan tidak valid")
-
-// 	}
-// 	_, errService := service.GetAuthorID(tokenStr)
-
-// 	if errService != nil {
-// 		return c.JSON(http.StatusBadRequest, "Gagal menambahkan konten")
-// 	}
-
-//		return c.JSON(http.StatusOK, "Berhasil menambahkan konten")
-//	}
-
 func CreateContent(c echo.Context) error {
 	tokenStr := c.Request().Header.Get("Authorization")
 	tokenSplit := strings.Split(tokenStr, " ")
@@ -100,23 +73,42 @@ func CreateContent(c echo.Context) error {
 
 func ContentUpdate(c echo.Context) error {
 	id, _ := strconv.Atoi(c.Param("id"))
+	tokenStr := c.Request().Header.Get("Authorization")
+	tokenSplit := strings.Split(tokenStr, " ")
+	tokenOnly := tokenSplit[1]
+
+	if tokenStr == "" {
+		return c.JSON(http.StatusUnauthorized, map[string]interface{}{"error": "Token not provided"})
+	}
+
+	userID, err := service.GetAuthorInfoFromToken(tokenOnly)
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, map[string]interface{}{"error": "Invalid or missing token"})
+	}
 
 	var editContent models.Content
-
-	c.Bind(&editContent)
-	err := c.Validate(&editContent)
-
-	if err == nil {
-		_, updateErr := service.EditContent(editContent, id)
-		if updateErr != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "data belum dimasukkan")
-		}
+	if err := c.Bind(&editContent); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": "Invalid data provided"})
 	}
-	return c.JSON(http.StatusOK, &models.Response{
-		Message: "Berhasil update",
-		Status:  true,
-	})
+	// Mengambil author_id dari konten yang ingin diedit
+	originalContent, err := service.Content(id)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": "Failed to fetch content"})
+	}
+
+	// Memeriksa apakah user_id dari token cocok dengan author_id dari konten
+	if userID != originalContent.Author_id {
+		return c.JSON(http.StatusForbidden, map[string]interface{}{"error": "You are not authorized to edit this content"})
+	}
+
+	_, err = service.EditContent(editContent, id, userID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": "Failed to edit content"})
+	}
+
+	return c.JSON(http.StatusOK, map[string]interface{}{"message": "Content edited successfully"})
 }
+
 func ContentDelete(c echo.Context) error {
 	id, _ := strconv.Atoi(c.Param("id"))
 

@@ -29,16 +29,16 @@ func Content(id int) (models.Content, error) {
 	idStr := strconv.Itoa(id)
 
 	err := db.Get(&specContent, "SELECT * FROM contents WHERE id = $1", idStr)
-	if err != nil {
-		return models.Content{}, err
-	}
-	return specContent, nil
+	// if err != nil {
+	// 	return models.Content{}, err
+	// }
+	return specContent, err
 
 }
 
-func GetUsernameByID(userID int) (string, error) {
+func GetUsernameByID(authorID int) (string, error) {
 	var username string
-	err := db.QueryRow("SELECT username FROM users WHERE id = $1", userID).Scan(&username)
+	err := db.QueryRow("SELECT username FROM users WHERE id = $1", authorID).Scan(&username)
 	if err != nil {
 		return "", err
 	}
@@ -75,19 +75,24 @@ func CreateContent(createContent models.Content, authorID int) error {
 	return nil
 }
 
-func EditContent(editContent models.Content, id int) (models.Content, error) {
+func EditContent(editContent models.Content, id int, authorID int) (models.Content, error) {
 	idStr := strconv.Itoa(id)
+	username, err := GetUsernameByID(authorID)
+	if err != nil {
+		return models.Content{}, err
+	}
 
-	_, err := db.NamedExec("UPDATE contents SET title = :title, content = :content, category_id = :category_id, author_id = :author_id WHERE id = :id", map[string]interface{}{
+	_, errInsert := db.NamedExec("UPDATE contents SET title = :title, content = :content, category_id = :category_id, author_id = :author_id, modified_by = :modified_by WHERE id = :id", map[string]interface{}{
 		"title":       editContent.Title,
 		"content":     editContent.Content_post,
 		"category_id": editContent.Category_id,
-		"author_id":   editContent.Author_id,
+		"author_id":   authorID,
+		"modified_by": username,
 		"id":          idStr,
 	})
 
-	if err != nil {
-		return models.Content{}, err
+	if errInsert != nil {
+		return models.Content{}, errInsert
 	}
 	return editContent, nil
 }
