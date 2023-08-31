@@ -12,6 +12,7 @@ func main() {
 	e := routes.Route()
 
 	e.Use(middleware.Logger())
+	e.Use(middleware.CORS())
 	customValidator := &utils.CustomValidator{Validator: validator.New()}
 	e.Validator = customValidator
 	e.Logger.Fatal(e.Start(":8080"))
