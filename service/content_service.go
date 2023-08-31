@@ -3,6 +3,7 @@ package service
 import (
 	"blog/models"
 	"errors"
+	"fmt"
 	"strconv"
 
 	"github.com/golang-jwt/jwt"
@@ -36,6 +37,17 @@ func Content(id int) (models.Content, error) {
 
 }
 
+func MyContent(authorID int) ([]models.Content, error) {
+	idStr := strconv.Itoa(authorID)
+	var myContent []models.Content
+
+	err := db.Select(&myContent, "SELECT * FROM contents WHERE author_id = $1", idStr)
+	if err != nil {
+		fmt.Printf("Error fetching content: %s", err)
+	}
+	return myContent, err
+}
+
 func GetUsernameByID(authorID int) (string, error) {
 	var username string
 	err := db.QueryRow("SELECT username FROM users WHERE id = $1", authorID).Scan(&username)
@@ -44,6 +56,7 @@ func GetUsernameByID(authorID int) (string, error) {
 	}
 	return username, nil
 }
+
 func GetAuthorInfoFromToken(tokenStr string) (int, error) {
 	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
 		return []byte("rahasia"), nil

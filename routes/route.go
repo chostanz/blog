@@ -37,6 +37,7 @@ func Route() *echo.Echo {
 	// all about contents
 	r.GET("/contents", controller.GetAllContent)
 	r.GET("/content/:id", controller.GetSpecContent)
+	authorGroup.GET("/content/mycontent", controller.GetMyContent)
 	authorGroup.POST("/content/create", controller.CreateContent)
 	authorGroup.PUT("/content/update/:id", controller.ContentUpdate)
 	authorGroup.DELETE("/content/delete/:id", controller.ContentDelete)

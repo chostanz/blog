@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
 )
 
@@ -41,6 +42,42 @@ func GetSpecContent(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, getContent)
 
+}
+
+func GetMyContent(c echo.Context) error {
+	tokenStr := c.Request().Header.Get("Authorization")
+	if tokenStr == "" {
+		return c.JSON(http.StatusUnauthorized, map[string]interface{}{"error": "Token not provided"})
+	}
+
+	tokenSplit := strings.Split(tokenStr, " ")
+	if len(tokenSplit) != 2 {
+		return c.JSON(http.StatusUnauthorized, map[string]interface{}{"error": "Invalid token format"})
+	}
+
+	tokenOnly := tokenSplit[1]
+
+	// Gunakan pustaka JWT untuk memeriksa dan memecahkan token
+	token, err := jwt.Parse(tokenOnly, func(token *jwt.Token) (interface{}, error) {
+		return []byte("rahasia"), nil // Ganti dengan kunci rahasia Anda
+	})
+	if err != nil || !token.Valid {
+		return c.JSON(http.StatusUnauthorized, map[string]interface{}{"error": "Invalid token"})
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return c.JSON(http.StatusUnauthorized, map[string]interface{}{"error": "Invalid token claims"})
+	}
+
+	authorID := int(claims["id_user"].(float64)) // Pastikan "user_id" sesuai dengan yang disimpan dalam token
+
+	myContent, err := service.MyContent(authorID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": "Failed to fetch content"})
+	}
+
+	return c.JSON(http.StatusOK, myContent)
 }
 
 func CreateContent(c echo.Context) error {
