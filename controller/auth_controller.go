@@ -137,35 +137,28 @@ func RegisterAuthor(c echo.Context) error {
 }
 
 func EchoHandleLogout(c echo.Context) error {
-	// cookie := &http.Cookie{
-	// 	Name:   "rahasia",
-	// 	Value:  "",  // Mengosongkan value cookie
-	// 	Path:   "/", // path pengaturan cookie sebelumnya
-	// 	MaxAge: -1,  // atur MaxAge menjadi negatif untuk menghapus cookie
-	// }
-	// c.SetCookie(cookie)
-	// return c.String(http.StatusOK, "Logout berhasil")
-
-	// token := c.Get("users").(*jwt.Token)
-	// claims := token.Claims.(*JwtCustomClaims)
-	// invalidTokens[token.Raw] = struct{}{} // Tambahkan token ke dalam daftar yang tidak valid
-	// // Convert IdUser to string
-	// idUserStr := strconv.Itoa(claims.IdUser)
-	// return c.String(http.StatusOK, idUserStr)
 
 	token, ok := c.Get("users").(*jwt.Token)
 	InvalidTokens[token.Raw] = struct{}{}
 	if !ok {
-		return c.String(http.StatusBadRequest, "Invalid token in context")
+		return c.JSON(http.StatusBadRequest, &models.LoginResp{
+			Message: "Token invalid",
+			Status:  false,
+		})
 	}
 
 	_, ok = token.Claims.(jwt.MapClaims)
 	if !ok {
-		return c.String(http.StatusUnauthorized, "Invalid token claims")
+		return c.JSON(http.StatusUnauthorized, &models.LoginResp{
+			Message: "Token authentikasi tidak sah",
+			Status:  false,
+		})
 	}
 
-	//invalidTokens[token.Raw] = struct{}{}
-
-	return c.String(http.StatusOK, "Logged out for user ")
+	return c.JSON(http.StatusOK, &models.LoginResp{
+		Code:    200,
+		Message: "Berhasil logout!",
+		Status:  true,
+	})
 
 }

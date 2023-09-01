@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"blog/controller"
+	"blog/models"
 	"fmt"
 	"net/http"
 	"reflect"
@@ -18,20 +19,39 @@ func AuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		tokenOnly := tokenSplit[1]
 		fmt.Println("Token", tokenOnly)
 		if tokenString == "" {
-			fmt.Println("Error: Token not provided") // Mencetak error
-			return c.JSON(http.StatusUnauthorized, "Missing token")
+			return c.JSON(http.StatusUnauthorized, &models.Response{
+				Code:    401,
+				Message: "Token tidak ditemukan!",
+				Status:  false,
+			})
 		}
 
 		token, err := jwt.Parse(tokenOnly, func(token *jwt.Token) (interface{}, error) {
 			return []byte("rahasia"), nil
 		})
 		if err != nil || !token.Valid {
-			return c.JSON(http.StatusUnauthorized, "Invalid token")
+			return c.JSON(http.StatusUnauthorized, &models.Response{
+				Code:    401,
+				Message: "Token invalid!",
+				Status:  false,
+			})
 		}
 
 		claims, ok := token.Claims.(jwt.MapClaims)
 		if !ok {
-			return c.JSON(http.StatusUnauthorized, "Invalid token claims")
+			return c.JSON(http.StatusUnauthorized, &models.Response{
+				Code:    401,
+				Message: "Token claims invalid!",
+				Status:  false,
+			})
+		}
+		// Check apakah token ada di invalidTokens
+		if _, exists := controller.InvalidTokens[token.Raw]; exists {
+			return c.JSON(http.StatusUnauthorized, &models.Response{
+				Code:    401,
+				Message: "Sesi berakhir! Silahkan login kembali",
+				Status:  false,
+			})
 		}
 
 		roleID := int(claims["id_role"].(float64))
@@ -43,7 +63,11 @@ func AuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 			return next(c)
 		} else {
 			fmt.Println("Access denied")
-			return c.JSON(http.StatusForbidden, "Access denied")
+			return c.JSON(http.StatusForbidden, &models.Response{
+				Code:    403,
+				Message: "Akses ditolak!",
+				Status:  false,
+			})
 		}
 
 	}
@@ -56,7 +80,11 @@ func AdminMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		fmt.Println("Token:", tokenSplit)
 		tokenOnly := tokenSplit[1]
 		if tokenString == "" {
-			return c.JSON(http.StatusUnauthorized, "Missing token")
+			return c.JSON(http.StatusUnauthorized, &models.Response{
+				Code:    401,
+				Message: "Token tidak ditemukan!",
+				Status:  false,
+			})
 		}
 
 		token, err := jwt.Parse(tokenOnly, func(token *jwt.Token) (interface{}, error) {
@@ -64,27 +92,43 @@ func AdminMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		})
 
 		if err != nil || !token.Valid {
-			return c.JSON(http.StatusUnauthorized, "Invalid token")
+			return c.JSON(http.StatusUnauthorized, &models.Response{
+				Code:    401,
+				Message: "Token invalid!",
+				Status:  false,
+			})
 		}
 
 		claims, ok := token.Claims.(jwt.MapClaims)
 		if !ok {
 			fmt.Println("Tipe asli dari token.Claims:", reflect.TypeOf(token.Claims))
-			return c.JSON(http.StatusUnauthorized, "Klaim token tidak valid")
+			return c.JSON(http.StatusUnauthorized, &models.Response{
+				Code:    401,
+				Message: "Token claims tidak valid!",
+				Status:  false,
+			})
 		}
 
 		fmt.Println(claims)
 
-		// Check if the token is in the invalidTokens list
+		// Check apakah token ada di invalidTokens
 		if _, exists := controller.InvalidTokens[token.Raw]; exists {
-			return c.JSON(http.StatusUnauthorized, "Sesi berakhir! Silahkan login kembali")
+			return c.JSON(http.StatusUnauthorized, &models.Response{
+				Code:    401,
+				Message: "Sesi berakhir! Silahkan login kembali",
+				Status:  false,
+			})
 		}
 
 		c.Set("users", token)
 
 		roleID := int(claims["id_role"].(float64))
 		if roleID != 1 {
-			return c.JSON(http.StatusForbidden, "Access denied")
+			return c.JSON(http.StatusForbidden, &models.Response{
+				Code:    403,
+				Message: "Akses ditolak!",
+				Status:  false,
+			})
 		}
 
 		return next(c)
@@ -98,22 +142,38 @@ func AuthorMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		//fmt.Println("Token", tokenSplit)
 		tokenOnly := tokenSplit[1]
 		if tokenString == "" {
-			return c.JSON(http.StatusUnauthorized, "Missing token")
+			return c.JSON(http.StatusUnauthorized, &models.Response{
+				Code:    401,
+				Message: "Token tidak ditemukan!",
+				Status:  false,
+			})
 		}
 
 		token, err := jwt.Parse(tokenOnly, func(token *jwt.Token) (interface{}, error) {
 			return []byte("rahasia"), nil
 		})
 		if err != nil || !token.Valid {
-			return c.JSON(http.StatusUnauthorized, "Invalid token")
+			return c.JSON(http.StatusUnauthorized, &models.Response{
+				Code:    401,
+				Message: "Token invalid!",
+				Status:  false,
+			})
 		}
 
 		claims, ok := token.Claims.(jwt.MapClaims)
 		if !ok {
-			return c.JSON(http.StatusUnauthorized, "Invalid token claims")
+			return c.JSON(http.StatusUnauthorized, &models.Response{
+				Code:    401,
+				Message: "Token claims invalid!",
+				Status:  false,
+			})
 		}
 		if _, exists := controller.InvalidTokens[token.Raw]; exists {
-			return c.JSON(http.StatusUnauthorized, "Sesi berakhir! Silahkan login kembali")
+			return c.JSON(http.StatusUnauthorized, &models.Response{
+				Code:    401,
+				Message: "Sesi berakhir! Silahkan login kembali",
+				Status:  false,
+			})
 		}
 		authorID := int(claims["id_user"].(float64))
 		c.Set("author_id", authorID)
@@ -122,7 +182,11 @@ func AuthorMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 
 		roleID := int(claims["id_role"].(float64))
 		if roleID != 2 {
-			return c.JSON(http.StatusForbidden, "Access denied")
+			return c.JSON(http.StatusForbidden, &models.Response{
+				Code:    403,
+				Message: "Akses ditolak!",
+				Status:  false,
+			})
 		}
 		return next(c)
 	}
