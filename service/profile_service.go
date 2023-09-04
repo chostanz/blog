@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/jinzhu/gorm"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -80,4 +81,23 @@ func EditPassword(changePassword models.ChangePasswordRequest, id int) error {
 		return err
 	}
 	return nil
+}
+
+type UserService struct {
+	db *gorm.DB
+}
+
+// membuat function baru dengan parameter db tipe *gorm.DB yang nilai akhirnya adalah UserService
+// mengembalikan userservice yang didapat dari objek userservice yg diinisiasi dengan db
+func NewUserService(db *gorm.DB) *UserService {
+	return &UserService{db: db}
+}
+
+func (s *UserService) UpdatePictureURL(userID int, pictureURL string) error {
+	user := models.User{}
+	if err := s.db.First(&user, userID).Error; err != nil {
+		return err
+	}
+	user.PictureURL = pictureURL
+	return s.db.Save(&user).Error
 }

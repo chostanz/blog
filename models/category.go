@@ -7,12 +7,12 @@ import (
 
 type Kategori struct {
 	Id       int    `json:"id" db:"id"`
-	Category string `json:"category" db:"category" validate:"required"`
+	Category string `json:"category" db:"name" validate:"required"`
 }
 
 type SpecCategory struct {
 	Id         int            `json:"id" db:"id"`
-	Category   string         `json:"category" db:"category" validate:"required"`
+	Category   string         `json:"category" db:"name" validate:"required"`
 	Title      string         `json:"title" db:"title"`
 	Content    string         `json:"content" db:"content"`
 	CreatedAt  time.Time      `json:"created_at" db:"created_at"`

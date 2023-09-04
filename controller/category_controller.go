@@ -29,7 +29,23 @@ func GetSpecCategory(c echo.Context) error {
 	id, _ := strconv.Atoi(c.Param("id"))
 	fmt.Println("Fetching category with ID:", id)
 
-	getCategory, err := service.Category(id)
+	getCategory, err := service.SpecCategory(id)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return echo.NewHTTPError(http.StatusNotFound, &models.Response{
+			Message: "Kategori tidak ditemukan",
+		})
+	}
+
+	fmt.Println("Category fetched successfully - ID:", getCategory.Id)
+	return c.JSON(http.StatusOK, getCategory)
+}
+
+func GetContentCategory(c echo.Context) error {
+	id, _ := strconv.Atoi(c.Param("id"))
+	fmt.Println("Fetching category with ID:", id)
+
+	getCategory, err := service.ContentCategory(id)
 	if err != nil {
 		fmt.Println("Error:", err)
 		return echo.NewHTTPError(http.StatusNotFound, &models.Response{

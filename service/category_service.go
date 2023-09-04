@@ -23,11 +23,27 @@ func AllCategory() ([]models.Kategori, error) {
 
 }
 
-func Category(id int) (models.SpecCategory, error) {
+func SpecCategory(id int) (models.Kategori, error) {
+	var specCategory models.Kategori
+	idStr := strconv.Itoa(id)
+
+	err := db.Get(&specCategory, "SELECT * from categories WHERE id = $1", idStr)
+
+	if err != nil {
+		fmt.Println("Error fetching category with ID", idStr, ":", err)
+
+		fmt.Println("Error:", err)
+		return models.Kategori{}, err
+	}
+	fmt.Println("Fetched category:", specCategory.Category)
+	return specCategory, nil
+}
+
+func ContentCategory(id int) (models.SpecCategory, error) {
 	var specCategory models.SpecCategory
 	idStr := strconv.Itoa(id)
 
-	err := db.Get(&specCategory, "SELECT c.category, co.id, co.title, co.content, co.created_at, co.modified_at, co.created_by, co.modified_by FROM categories c JOIN contents co ON c.id = co.category_id WHERE c.id = $1", idStr)
+	err := db.Get(&specCategory, "SELECT c.name, co.id, co.title, co.content, co.created_at, co.modified_at, co.created_by, co.modified_by FROM categories c JOIN contents co ON c.id = co.category_id WHERE c.id = $1", idStr)
 
 	if err != nil {
 		fmt.Println("Error fetching category with ID", idStr, ":", err)
@@ -40,7 +56,7 @@ func Category(id int) (models.SpecCategory, error) {
 }
 
 func CreateCategory(createCategory models.Kategori) error {
-	_, err := db.NamedExec("INSERT INTO categories (category) VALUES (:category)", createCategory)
+	_, err := db.NamedExec("INSERT INTO categories (name) VALUES (:category)", createCategory)
 	if err != nil {
 		return err
 	}
@@ -50,7 +66,7 @@ func CreateCategory(createCategory models.Kategori) error {
 func EditCategory(editCategory models.Kategori, id int) (models.Kategori, error) {
 	idStr := strconv.Itoa(id)
 
-	_, err := db.NamedExec("UPDATE categories SET category = :category WHERE id = :id", map[string]interface{}{
+	_, err := db.NamedExec("UPDATE categories SET name = :category WHERE id = :id", map[string]interface{}{
 		"category": editCategory.Category,
 		"id":       idStr,
 	})
