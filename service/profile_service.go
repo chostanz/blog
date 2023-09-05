@@ -7,18 +7,17 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/jinzhu/gorm"
+	"github.com/jmoiron/sqlx"
 	"golang.org/x/crypto/bcrypt"
 )
 
 func EditProfile(UserProfile models.Profile, id int) (models.Profile, error) {
 	idStr := strconv.Itoa(id)
 
-	_, err := db.NamedExec("UPDATE users SET name = :name, bio = :bio, picture_url = :picture_url WHERE id = :id", map[string]interface{}{
-		"name":        UserProfile.Name,
-		"bio":         UserProfile.Bio,
-		"picture_url": UserProfile.Pictureurl,
-		"id":          idStr,
+	_, err := db.NamedExec("UPDATE users SET name = :name, bio = :bio WHERE id = :id", map[string]interface{}{
+		"name": UserProfile.Name,
+		"bio":  UserProfile.Bio,
+		"id":   idStr,
 	})
 
 	if err != nil {
@@ -31,7 +30,7 @@ func GetProfile(id int) (models.Profile, error) {
 	var userProfile models.Profile
 	idStr := strconv.Itoa(id)
 
-	err := db.Get(&userProfile, "SELECT id, name, bio, picture_url FROM users WHERE id = $1", idStr)
+	err := db.Get(&userProfile, "SELECT id, name, picture_url, bio FROM users WHERE id = $1", idStr)
 	if err != nil {
 		return models.Profile{}, err
 	}
@@ -84,20 +83,17 @@ func EditPassword(changePassword models.ChangePasswordRequest, id int) error {
 }
 
 type UserService struct {
-	db *gorm.DB
+	db *sqlx.DB
 }
 
 // membuat function baru dengan parameter db tipe *gorm.DB yang nilai akhirnya adalah UserService
 // mengembalikan userservice yang didapat dari objek userservice yg diinisiasi dengan db
-func NewUserService(db *gorm.DB) *UserService {
+func NewUserService(db *sqlx.DB) *UserService {
 	return &UserService{db: db}
 }
 
 func (s *UserService) UpdatePictureURL(userID int, pictureURL string) error {
-	user := models.User{}
-	if err := s.db.First(&user, userID).Error; err != nil {
-		return err
-	}
-	user.PictureURL = pictureURL
-	return s.db.Save(&user).Error
+	query := "UPDATE users SET picture_url = $1 WHERE id = $2"
+	_, err := s.db.Exec(query, pictureURL, userID)
+	return err
 }

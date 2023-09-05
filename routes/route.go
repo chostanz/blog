@@ -4,7 +4,6 @@ import (
 	"blog/controller"
 	"blog/database"
 	"blog/middleware"
-	"blog/models"
 	"blog/service"
 	"blog/utils"
 
@@ -16,42 +15,48 @@ func Route() *echo.Echo {
 	r := echo.New()
 	r.Validator = &utils.CustomValidator{Validator: validator.New()}
 
-	authGroup := r.Group("/auth")
-	authGroup.Use(middleware.AuthMiddleware)
-	// defer db.Close()
-	// Auto Migrate
-	database.DbGorm().AutoMigrate(&models.User{})
+	db := database.Koneksi()
 
-	userService := service.NewUserService(database.DbGorm())
+	// // Auto Migrate
+	// database.DbGorm().AutoMigrate(&models.User{})
+
+	userService := service.NewUserService(db)
 	userController := controller.NewUserController(userService)
 
-	// Menggunakan middleware untuk menyimpan koneksi database dalam konteks Echo
-	authGroup.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			c.Set("db", database.DbGorm())
-			return next(c)
-		}
-	})
+	adminGroup := r.Group("/admin")
+	adminGroup.Use(middleware.AdminMiddleware)
 
-	authGroup.POST("/upload-picture", userController.UploadPicture)
+	//kelompok rute authentikasi
+	authGroup := r.Group("/auth")
+	authGroup.Use(middleware.AuthMiddleware)
 
-	// authGroup := r.Group("/auth")
-	// authGroup.Use(AuthMiddleware)
+	// // Menggunakan middleware untuk menyimpan koneksi database dalam konteks Echo
+	// authGroup.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
+	// 	return func(c echo.Context) error {
+	// 		c.Set("db", database.DbGorm())
+	// 		return next(c)
+	// 	}
+	// })
 
-	// // Rute untuk mendapatkan profil berdasarkan id_user
-	// // Kelompok rute yang memerlukan Basic Authentication
+	contentService := service.NewContentService(db)
+	contentController := controller.NewContentController(contentService)
+
+	apiGroup := r.Group("/api")
+	apiGroup.Use(middleware.SetContentServiceMiddleware(contentService))
+
 	authorGroup := r.Group("/author")
 	authorGroup.Use(middleware.AuthorMiddleware)
-
-	authGroup.GET("/profile", controller.GetSpecProfile)
-	authGroup.PUT("/profile/update", controller.ProfileUpdate)
 
 	r.POST("/login", controller.Login)
 	r.POST("/register-reader", controller.RegisterReader)
 	r.POST("/register-author", controller.RegisterAuthor)
-	//profile users
-	// r.GET("/profile/:id", controller.GetSpecProfile)
+
 	authGroup.PUT("/password/change", controller.PasswordUpdate)
+
+	authGroup.GET("/profile", controller.GetSpecProfile)
+	authGroup.PUT("/profile/update", controller.ProfileUpdate)
+	//rute untuk mengunggah foto proflil
+	authGroup.POST("/upload-picture", userController.UploadPicture)
 
 	// all about contents
 	r.GET("/contents", controller.GetAllContent)
@@ -59,16 +64,10 @@ func Route() *echo.Echo {
 	authorGroup.GET("/content/mycontent", controller.GetMyContent)
 	authorGroup.POST("/content/create", controller.CreateContent)
 	authorGroup.PUT("/content/update/:id", controller.ContentUpdate)
+	apiGroup.PUT("/upload-image/:contentID/cover-image", contentController.UploadCoverImage, middleware.AuthorMiddleware)
 	authorGroup.DELETE("/content/delete/:id", controller.ContentDelete)
 
-	//change password
-
 	r.GET("/categories", controller.GetAllCategory)
-
-	adminGroup := r.Group("/admin")
-	adminGroup.Use(middleware.AdminMiddleware)
-
-	//all about category
 	r.GET("/category/:id", controller.GetSpecCategory)
 	r.GET("/category-content/:id", controller.GetContentCategory)
 	adminGroup.POST("/category/create", controller.CategoryAdd)
@@ -83,6 +82,8 @@ func Route() *echo.Echo {
 
 	adminGroup.POST("/logout", controller.EchoHandleLogout)
 	authorGroup.POST("/logout", controller.EchoHandleLogout)
+
 	r.Static("/picture", "E:/golang/blog/picture")
+	r.Static("/cover", "E:/golang/blog/cover")
 	return r
 }

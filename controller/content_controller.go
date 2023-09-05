@@ -148,11 +148,78 @@ func ContentUpdate(c echo.Context) error {
 
 func ContentDelete(c echo.Context) error {
 	id, _ := strconv.Atoi(c.Param("id"))
+	tokenStr := c.Request().Header.Get("Authorization")
+	tokenSplit := strings.Split(tokenStr, " ")
+	tokenOnly := tokenSplit[1]
+
+	if tokenStr == "" {
+		return c.JSON(http.StatusUnauthorized, map[string]interface{}{"error": "Token not provided"})
+	}
+
+	userID, err := service.GetAuthorInfoFromToken(tokenOnly)
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, map[string]interface{}{"error": "Invalid or missing token"})
+	}
 
 	var deleteContent models.Content
-	_, err := service.DeleteContent(deleteContent, id)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	if err := c.Bind(&deleteContent); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": "Invalid data provided"})
 	}
+	// Mengambil author_id dari konten yang ingin diedit
+	originalContent, err := service.Content(id)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": "Failed to fetch content"})
+	}
+
+	// Memeriksa apakah user_id dari token cocok dengan author_id dari konten
+	if userID != originalContent.Author_id {
+		return c.JSON(http.StatusForbidden, map[string]interface{}{"error": "You are not authorized to delete this content"})
+	}
+
+	_, err = service.EditContent(deleteContent, id, userID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": "Failed to delete content"})
+	}
+
+	//	return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+
 	return c.JSON(http.StatusOK, "okee")
+}
+
+type ContentController struct {
+	contentService *service.ContentService
+}
+
+func NewContentController(contentService *service.ContentService) *ContentController {
+	return &ContentController{contentService: contentService}
+}
+
+func (c *ContentController) UploadCoverImage(e echo.Context) error {
+	contentID, err := strconv.Atoi(e.Param("contentID"))
+	if err != nil {
+		return e.String(http.StatusBadRequest, "Invalid content ID")
+	}
+
+	// Menerima berkas yang diunggah
+	file, err := e.FormFile("cover_image")
+	if err != nil {
+		return e.String(http.StatusBadRequest, "Error uploading image")
+	}
+
+	// Simpan gambar dengan nama unik di server (ganti dengan path yang sesuai)
+	pathGambar := "E:/golang/blog/cover/" + file.Filename
+	if err := saveUploadedFile(file, pathGambar); err != nil {
+		return e.String(http.StatusInternalServerError, "Error saving image")
+	}
+
+	// Dapatkan URL gambar yang baru diunggah
+	baseURL := "http://localhost:8080"
+	coverURL := baseURL + "/cover/" + file.Filename
+
+	// Upload URL gambar sampul ke layanan ContentService
+	if err := c.contentService.UploadCoverImage(int(contentID), coverURL); err != nil {
+		return e.String(http.StatusInternalServerError, "Failed to upload cover image URL")
+	}
+
+	return e.String(http.StatusOK, "Cover image uploaded and URL updated")
 }

@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/jinzhu/gorm"
 	"github.com/labstack/echo/v4"
 )
 
@@ -99,36 +98,6 @@ func saveUploadedFile(file *multipart.FileHeader, path string) error {
 	return nil
 }
 
-// func (c *UserController) UploadPicture(e echo.Context) error {
-// 	userID := uint(1) // Ganti dengan pengambilan ID dari sesi atau permintaan
-
-// 	// Menerima berkas yang diunggah
-// 	file, err := e.FormFile("image")
-// 	if err != nil {
-// 		return e.String(http.StatusBadRequest, "Error uploading image")
-// 	}
-// 	db := c.userService.db.Begin() // Mulai transaksi
-// 	defer db.Close()               // Tutup transaksi setelah selesai
-
-// 	// Simpan gambar dengan nama unik di server
-// 	pathGambar := "E:/golang/blog/picture/" + file.Filename
-// 	if err := saveUploadedFile(file, pathGambar); err != nil {
-// 		return e.String(http.StatusInternalServerError, "Error saving image")
-// 	}
-
-// 	// Membuat URL gambar berdasarkan base URL situs dan path gambar
-// 	baseURL := "https://example.com" // Ganti dengan base URL situs Anda
-// 	pictureURL := baseURL + "/" + pathGambar
-
-// 	// Memperbarui URL gambar dalam database
-// 	if err := c.userService.UpdatePictureURL(db, userID, pictureURL); err != nil {
-// 		return e.String(http.StatusInternalServerError, "Failed to update picture URL")
-// 	}
-// 	db.Commit() // Konfirmasi transaksi jika sukses
-
-// 	return e.String(http.StatusOK, "Picture uploaded and URL updated")
-// }
-
 func (c *UserController) UploadPicture(e echo.Context) error {
 	userID := e.Get("id_user").(int) // Mengambil ID U
 
@@ -146,22 +115,11 @@ func (c *UserController) UploadPicture(e echo.Context) error {
 	baseURL := "http://localhost:8080"
 	pictureURL := baseURL + "/picture/" + file.Filename
 
-	// Mulai transaksi database
-	db := e.Get("db").(*gorm.DB)
-	tx := db.Begin()
-	defer func() {
-		if r := recover(); r != nil {
-			tx.Rollback()
-		}
-	}()
-
 	// Memperbarui URL gambar dalam database
 	if err := c.userService.UpdatePictureURL(userID, pictureURL); err != nil {
-		tx.Rollback()
-		return e.String(http.StatusInternalServerError, "Failed to update picture URL")
-	}
+		return e.String(http.StatusInternalServerError, "Failed to upload cover image URL")
 
-	tx.Commit()
+	}
 
 	return e.String(http.StatusOK, "Picture uploaded and URL updated")
 }

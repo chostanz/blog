@@ -3,6 +3,7 @@ package middleware
 import (
 	"blog/controller"
 	"blog/models"
+	"blog/service"
 	"fmt"
 	"net/http"
 	"reflect"
@@ -189,5 +190,14 @@ func AuthorMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 			})
 		}
 		return next(c)
+	}
+}
+
+func SetContentServiceMiddleware(contentService *service.ContentService) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			c.Set("contentService", contentService)
+			return next(c)
+		}
 	}
 }

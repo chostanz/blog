@@ -4,9 +4,11 @@ import (
 	"blog/models"
 	"errors"
 	"fmt"
+	"log"
 	"strconv"
 
 	"github.com/golang-jwt/jwt"
+	"github.com/jmoiron/sqlx"
 )
 
 func ContentAll() ([]models.Content, error) {
@@ -118,4 +120,21 @@ func DeleteContent(deleteContent models.Content, id int) (models.Content, error)
 		return models.Content{}, err
 	}
 	return deleteContent, nil
+}
+
+type ContentService struct {
+	db *sqlx.DB
+}
+
+func NewContentService(db *sqlx.DB) *ContentService {
+	return &ContentService{db: db}
+}
+
+func (s *ContentService) UploadCoverImage(contentID int, coverURL string) error {
+	_, err := s.db.Exec("UPDATE contents SET cover_image_url = $1 WHERE id = $2", coverURL, contentID)
+	if err != nil {
+		log.Println("Error updating cover image URL:", err)
+		return err
+	}
+	return nil
 }

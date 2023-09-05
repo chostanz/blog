@@ -1,7 +1,5 @@
 package models
 
-import "github.com/jinzhu/gorm"
-
 type Users struct {
 	Id       int    `json:"id" db:"id"`
 	Username string `json:"username" db:"username" validate:"required"`
@@ -15,6 +13,5 @@ type Password struct {
 }
 
 type User struct {
-	gorm.Model
-	PictureURL string `gorm:"type:varchar(255);default:''"`
+	PictureURL string `json:"picture_url" db:"picture_url"`
 }
