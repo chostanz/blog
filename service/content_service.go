@@ -112,7 +112,7 @@ func EditContent(editContent models.Content, id int, authorID int) (models.Conte
 	return editContent, nil
 }
 
-func DeleteContent(deleteContent models.Content, id int) (models.Content, error) {
+func DeleteContent(deleteContent models.Content, id int, authorID int) (models.Content, error) {
 	idStr := strconv.Itoa(id)
 
 	_, err := db.Exec("Delete from contents where id = $1", idStr)

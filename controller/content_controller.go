@@ -153,32 +153,67 @@ func ContentDelete(c echo.Context) error {
 	tokenOnly := tokenSplit[1]
 
 	if tokenStr == "" {
-		return c.JSON(http.StatusUnauthorized, map[string]interface{}{"error": "Token not provided"})
+		return c.JSON(http.StatusUnauthorized, "Token not provided")
 	}
 
 	userID, err := service.GetAuthorInfoFromToken(tokenOnly)
 	if err != nil {
-		return c.JSON(http.StatusUnauthorized, map[string]interface{}{"error": "Invalid or missing token"})
+		return c.JSON(http.StatusUnauthorized, "Invalid or missing token")
 	}
 
 	var deleteContent models.Content
 	if err := c.Bind(&deleteContent); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": "Invalid data provided"})
+		return c.JSON(http.StatusBadRequest, "Invalid data provided")
 	}
 	// Mengambil author_id dari konten yang ingin diedit
 	originalContent, err := service.Content(id)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": "Failed to fetch content"})
+		return c.JSON(http.StatusInternalServerError, "Failed to fetch content")
 	}
 
 	// Memeriksa apakah user_id dari token cocok dengan author_id dari konten
 	if userID != originalContent.Author_id {
-		return c.JSON(http.StatusForbidden, map[string]interface{}{"error": "You are not authorized to delete this content"})
+		return c.JSON(http.StatusForbidden, "You are not authorized to delete this content")
 	}
 
-	_, err = service.EditContent(deleteContent, id, userID)
+	_, err = service.DeleteContent(deleteContent, id, userID)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": "Failed to delete content"})
+		return c.JSON(http.StatusInternalServerError, "Failed to delete content")
+	}
+
+	//	return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+
+	return c.JSON(http.StatusOK, "okee")
+}
+
+func DeleteContent(c echo.Context) error {
+	id, _ := strconv.Atoi(c.Param("id"))
+	tokenStr := c.Request().Header.Get("Authorization")
+	tokenSplit := strings.Split(tokenStr, " ")
+	tokenOnly := tokenSplit[1]
+
+	if tokenStr == "" {
+		return c.JSON(http.StatusUnauthorized, "Token not provided")
+	}
+
+	userID, err := service.GetAuthorInfoFromToken(tokenOnly)
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, "Invalid or missing token")
+	}
+
+	var deleteContent models.Content
+	if err := c.Bind(&deleteContent); err != nil {
+		return c.JSON(http.StatusBadRequest, "Invalid data provided")
+	}
+	// Mengambil author_id dari konten yang ingin diedit
+	deleteContent, err = service.Content(id)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "Failed to fetch content")
+	}
+
+	_, err = service.DeleteContent(deleteContent, id, userID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "Failed to delete content")
 	}
 
 	//	return echo.NewHTTPError(http.StatusInternalServerError, err.Error())

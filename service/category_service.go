@@ -56,7 +56,7 @@ func ContentCategory(id int) (models.SpecCategory, error) {
 }
 
 func CreateCategory(createCategory models.Kategori) error {
-	_, err := db.NamedExec("INSERT INTO categories (name) VALUES (:category)", createCategory)
+	_, err := db.Exec("INSERT INTO categories (name) VALUES ($1)", createCategory.Category)
 	if err != nil {
 		return err
 	}

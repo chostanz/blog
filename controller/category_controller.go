@@ -67,12 +67,15 @@ func CategoryAdd(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "Data yang dimasukkan tidak valid")
 
 	}
-	err = service.CreateCategory(createCategory) // Memanggil fungsi CreateCategory dari service
+	// service.CreateCategory(createCategory) // Memanggil fungsi CreateCategory dari service
 
-	if err != nil {
+	// if err != nil {
+	// 	return c.JSON(http.StatusBadRequest, "Gagal menambahkan kategori")
+	// }
+
+	if err := service.CreateCategory(createCategory); err != nil {
 		return c.JSON(http.StatusBadRequest, "Gagal menambahkan kategori")
 	}
-
 	return c.JSON(http.StatusOK, "Berhasil menambahkan kategori")
 
 }

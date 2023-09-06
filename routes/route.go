@@ -56,7 +56,7 @@ func Route() *echo.Echo {
 	authGroup.GET("/profile", controller.GetSpecProfile)
 	authGroup.PUT("/profile/update", controller.ProfileUpdate)
 	//rute untuk mengunggah foto proflil
-	authGroup.POST("/upload-picture", userController.UploadPicture)
+	authGroup.PUT("/upload-picture", userController.UploadPicture)
 
 	// all about contents
 	r.GET("/contents", controller.GetAllContent)
@@ -66,6 +66,7 @@ func Route() *echo.Echo {
 	authorGroup.PUT("/content/update/:id", controller.ContentUpdate)
 	apiGroup.PUT("/upload-image/:contentID/cover-image", contentController.UploadCoverImage, middleware.AuthorMiddleware)
 	authorGroup.DELETE("/content/delete/:id", controller.ContentDelete)
+	adminGroup.DELETE("/content/delete/:id", controller.DeleteContent)
 
 	r.GET("/categories", controller.GetAllCategory)
 	r.GET("/category/:id", controller.GetSpecCategory)

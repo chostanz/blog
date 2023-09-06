@@ -10,7 +10,7 @@ import (
 var DB = Koneksi()
 
 func Koneksi() *sqlx.DB {
-	db, err := sqlx.Connect("postgres", "user=postgres password=12345 dbname=db_blog sslmode=disable")
+	db, err := sqlx.Connect("postgres", "user=postgres password=00000 dbname=db_blog sslmode=disable")
 
 	if err != nil {
 		log.Fatal(err)
