@@ -16,6 +16,7 @@ func GetAllCategory(c echo.Context) error {
 	category, err := service.AllCategory()
 	if err != nil {
 		response := models.Response{
+			Code:    404,
 			Message: "Halaman tidak ditemukan atau url salah",
 			Status:  false,
 		}
@@ -32,8 +33,10 @@ func GetSpecCategory(c echo.Context) error {
 	getCategory, err := service.SpecCategory(id)
 	if err != nil {
 		fmt.Println("Error:", err)
-		return echo.NewHTTPError(http.StatusNotFound, &models.Response{
+		return c.JSON(http.StatusNotFound, &models.Response{
+			Code:    404,
 			Message: "Kategori tidak ditemukan",
+			Status:  false,
 		})
 	}
 
@@ -49,7 +52,9 @@ func GetContentCategory(c echo.Context) error {
 	if err != nil {
 		fmt.Println("Error:", err)
 		return echo.NewHTTPError(http.StatusNotFound, &models.Response{
+			Code:    404,
 			Message: "Kategori tidak ditemukan",
+			Status:  false,
 		})
 	}
 
@@ -64,19 +69,26 @@ func CategoryAdd(c echo.Context) error {
 	c.Bind(&createCategory)
 	err := c.Validate(&createCategory)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, "Data yang dimasukkan tidak valid")
+		return c.JSON(http.StatusBadRequest, &models.Response{
+			Code:    400,
+			Message: "Data yang dimasukkan tidak valid",
+			Status:  false,
+		})
 
 	}
-	// service.CreateCategory(createCategory) // Memanggil fungsi CreateCategory dari service
-
-	// if err != nil {
-	// 	return c.JSON(http.StatusBadRequest, "Gagal menambahkan kategori")
-	// }
 
 	if err := service.CreateCategory(createCategory); err != nil {
-		return c.JSON(http.StatusBadRequest, "Gagal menambahkan kategori")
+		return c.JSON(http.StatusBadRequest, &models.Response{
+			Code:    400,
+			Message: "Gagal menambahkan kategori! Kategori sudah ada",
+			Status:  false,
+		})
 	}
-	return c.JSON(http.StatusOK, "Berhasil menambahkan kategori")
+	return c.JSON(http.StatusOK, &models.Response{
+		Code:    200,
+		Message: "Berhasil menambahkan kategori!",
+		Status:  true,
+	})
 
 }
 
@@ -91,11 +103,16 @@ func CategoryUpdate(c echo.Context) error {
 	if err == nil {
 		_, updateErr := service.EditCategory(editCategory, id)
 		if updateErr != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "data belum dimasukkan")
+			return c.JSON(http.StatusBadRequest, &models.Response{
+				Code:    400,
+				Message: "Kategori tidak boleh sama!",
+				Status:  false,
+			})
 		}
 	}
 	return c.JSON(http.StatusOK, &models.Response{
-		Message: "Berhasil update",
+		Code:    200,
+		Message: "Kategori berhasil diubah!",
 		Status:  true,
 	})
 }
@@ -106,7 +123,15 @@ func CategoryDelete(c echo.Context) error {
 	var deleteCategory models.Kategori
 	_, err := service.DeleteCategory(deleteCategory, id)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return echo.NewHTTPError(http.StatusInternalServerError, &models.Response{
+			Code:    500,
+			Message: "Terjadi kesalahan internal pada server. Mohon coba beberapa saat lagi!",
+			Status:  false,
+		})
 	}
-	return c.JSON(http.StatusOK, "okee")
+	return c.JSON(http.StatusOK, &models.Response{
+		Code:    200,
+		Message: "Berhasil dihapus!",
+		Status:  true,
+	})
 }

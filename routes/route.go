@@ -77,8 +77,8 @@ func Route() *echo.Echo {
 
 	//about admin permission to manage users
 	adminGroup.GET("/users", controller.GetAllUser)
-	adminGroup.PUT("/user/update/:id", controller.UserUpdate)
-	adminGroup.PUT("user/update-role/:id", controller.UserRoleUpdate)
+	//adminGroup.PUT("/user/update/:id", controller.UserUpdate)
+	adminGroup.PUT("/user/update/:id", controller.UserRoleUpdate)
 	adminGroup.DELETE("/user/delete/:id", controller.UserDelete)
 
 	adminGroup.POST("/logout", controller.EchoHandleLogout)

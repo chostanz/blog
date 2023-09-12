@@ -38,15 +38,18 @@ func EditUser(editUser models.Users, id int) (models.Users, error) {
 	return editUser, nil
 }
 
-func EditUserRole(userID int, roleID int) error {
+func EditUserRole(editRole models.Role, userID int) (models.Role, error) {
 	idStr := strconv.Itoa(userID)
-	_, err := db.Exec("UPDATE users_roles SET role_id = $1 WHERE user_id = $2", roleID, idStr)
+
+	_, err := db.NamedExec("UPDATE users_roles SET role_id = :role_id WHERE user_id = :user_id", map[string]interface{}{
+		"role_id": editRole.RoleID,
+		"user_id": idStr,
+	})
 	if err != nil {
 		fmt.Println("Error updating user role:", err)
-		return err
+		return models.Role{}, err
 	}
-
-	return nil
+	return editRole, nil
 }
 
 func DeleteUser(deleteUser models.Users, id int) (models.Users, error) {

@@ -15,3 +15,8 @@ type Password struct {
 type User struct {
 	PictureURL string `json:"picture_url" db:"picture_url"`
 }
+
+type Role struct {
+	RoleID int `json:"role_id" db:"role_id"`
+	UserID int `json:"user_id" db:"user_id"`
+}

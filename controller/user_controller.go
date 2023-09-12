@@ -15,6 +15,7 @@ func GetAllUser(c echo.Context) error {
 
 	if err != nil {
 		response := models.Response{
+			Code:    404,
 			Message: "Halaman tidak ditemukan atau url salah",
 			Status:  false,
 		}
@@ -32,32 +33,53 @@ func UserUpdate(c echo.Context) error {
 
 	if err != nil {
 		fmt.Println("Validation error:", err)
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, &models.Response{
+			Code:    400,
+			Message: "Data invalid",
+			Status:  false,
+		})
 	}
 
 	_, editErr := service.EditUser(editUser, id)
 	if editErr != nil {
 		fmt.Println("Error editing user:", editErr)
-		return c.JSON(http.StatusBadRequest, editErr.Error())
+		return c.JSON(http.StatusBadRequest, &models.Response{
+			Code:    400,
+			Message: "Gagal memperbarui pengguna",
+			Status:  false,
+		})
 	}
 
 	return c.JSON(http.StatusOK, &models.Response{
+		Code:    200,
 		Message: "Berhasil update",
 		Status:  true,
 	})
 }
 
 func UserRoleUpdate(c echo.Context) error {
-	userID, _ := strconv.Atoi(c.Param("id"))
-	roleID, _ := strconv.Atoi(c.Param("role_id"))
-
-	err := service.EditUserRole(userID, roleID)
+	userID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		fmt.Println("Error editing user role:", err)
-		return c.JSON(http.StatusBadRequest, err.Error())
+		return c.JSON(http.StatusBadRequest, &models.Response{
+			Code:    400,
+			Message: "ID pengguna tidak valid",
+			Status:  false,
+		})
+	}
+
+	var editRole models.Role
+	c.Bind(&editRole)
+	_, err = service.EditUserRole(editRole, userID)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, &models.Response{
+			Code:    400,
+			Message: "Gagal memperbarui peran pengguna",
+			Status:  false,
+		})
 	}
 
 	return c.JSON(http.StatusOK, &models.Response{
+		Code:    200,
 		Message: "Berhasil update role",
 		Status:  true,
 	})
@@ -69,11 +91,16 @@ func UserDelete(c echo.Context) error {
 	_, err := service.DeleteUser(deleteUser, id)
 
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, "Terjadi kesalahan internal")
+		return c.JSON(http.StatusInternalServerError, &models.Response{
+			Code:    500,
+			Message: "Terjadi kesalahan internal",
+			Status:  false,
+		})
 
 	}
 	return c.JSON(http.StatusOK, &models.Response{
-		Message: "Berhasil meghapus user",
+		Code:    200,
+		Message: "Berhasil menghapus user",
 		Status:  true,
 	})
 }

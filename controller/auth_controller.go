@@ -41,6 +41,7 @@ func Login(c echo.Context) error {
 
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, &models.LoginResp{
+			Code:    404,
 			Message: "Data login invalid",
 			Status:  false,
 		})
@@ -54,6 +55,7 @@ func Login(c echo.Context) error {
 		fmt.Println("Authentication failed")
 
 		return c.JSON(http.StatusUnauthorized, &models.LoginResp{
+			Code:    401,
 			Message: "Akun tidak ada atau password salah",
 			Status:  false,
 		})
@@ -71,14 +73,17 @@ func Login(c echo.Context) error {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	t, err := token.SignedString([]byte("rahasia"))
+	fmt.Println("token:", t)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, &models.AuthResp{
+			Code:    500,
 			Message: "Failed to create token",
 			Status:  false,
 		})
 	}
 
 	return c.JSON(http.StatusOK, &models.AuthResp{
+		Code:    200,
 		Message: "Berhasil login",
 		Status:  true,
 		Token:   t,
@@ -99,9 +104,14 @@ func RegisterReader(c echo.Context) error {
 		registerErr := service.RegisterReader(userRegister)
 		if registerErr != nil {
 
-			return echo.NewHTTPError(http.StatusBadRequest, "Username telah digunakan!")
+			return c.JSON(http.StatusBadRequest, &models.RegisterResp{
+				Code:    400,
+				Message: "Username atau email telah digunakan!",
+				Status:  false,
+			})
 		}
 		return c.JSON(http.StatusCreated, &models.RegisterResp{
+			Code:    201,
 			Message: "Berhasil register",
 			Status:  true,
 		})
@@ -124,9 +134,14 @@ func RegisterAuthor(c echo.Context) error {
 		registerErr := service.RegisterAuthor(userRegister)
 		if registerErr != nil {
 
-			return echo.NewHTTPError(http.StatusBadRequest, "Username telah digunakan!")
+			return c.JSON(http.StatusBadRequest, &models.RegisterResp{
+				Code:    400,
+				Message: "Username atau email telah digunakan!",
+				Status:  false,
+			})
 		}
 		return c.JSON(http.StatusCreated, &models.RegisterResp{
+			Code:    201,
 			Message: "Berhasil register",
 			Status:  true,
 		})
@@ -142,6 +157,7 @@ func EchoHandleLogout(c echo.Context) error {
 	InvalidTokens[token.Raw] = struct{}{}
 	if !ok {
 		return c.JSON(http.StatusBadRequest, &models.LoginResp{
+			Code:    400,
 			Message: "Token invalid",
 			Status:  false,
 		})
@@ -150,6 +166,7 @@ func EchoHandleLogout(c echo.Context) error {
 	_, ok = token.Claims.(jwt.MapClaims)
 	if !ok {
 		return c.JSON(http.StatusUnauthorized, &models.LoginResp{
+			Code:    401,
 			Message: "Token authentikasi tidak sah",
 			Status:  false,
 		})

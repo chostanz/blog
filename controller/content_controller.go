@@ -21,6 +21,7 @@ func GetAllContent(c echo.Context) error {
 
 	if err != nil {
 		response := models.Response{
+			Code:    404,
 			Message: "Halaman tidak ada atau url salah",
 			Status:  false,
 		}
@@ -37,7 +38,11 @@ func GetSpecContent(c echo.Context) error {
 
 	getContent, err := service.Content(id)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return c.JSON(http.StatusInternalServerError, &models.Response{
+			Code:    500,
+			Message: "Terjadi kesalahan internal pada server. Mohon coba beberapa saat lagi!",
+			Status:  false,
+		})
 	}
 
 	return c.JSON(http.StatusOK, getContent)
@@ -47,12 +52,12 @@ func GetSpecContent(c echo.Context) error {
 func GetMyContent(c echo.Context) error {
 	tokenStr := c.Request().Header.Get("Authorization")
 	if tokenStr == "" {
-		return c.JSON(http.StatusUnauthorized, map[string]interface{}{"error": "Token not provided"})
+		return c.JSON(http.StatusUnauthorized, "Token tidak tersedia")
 	}
 
 	tokenSplit := strings.Split(tokenStr, " ")
 	if len(tokenSplit) != 2 {
-		return c.JSON(http.StatusUnauthorized, map[string]interface{}{"error": "Invalid token format"})
+		return c.JSON(http.StatusUnauthorized, "Invalid token!")
 	}
 
 	tokenOnly := tokenSplit[1]
@@ -62,19 +67,23 @@ func GetMyContent(c echo.Context) error {
 		return []byte("rahasia"), nil // Ganti dengan kunci rahasia Anda
 	})
 	if err != nil || !token.Valid {
-		return c.JSON(http.StatusUnauthorized, map[string]interface{}{"error": "Invalid token"})
+		return c.JSON(http.StatusUnauthorized, "Invalid token")
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
-		return c.JSON(http.StatusUnauthorized, map[string]interface{}{"error": "Invalid token claims"})
+		return c.JSON(http.StatusUnauthorized, "Invalid token claims")
 	}
 
 	authorID := int(claims["id_user"].(float64)) // Pastikan "user_id" sesuai dengan yang disimpan dalam token
 
 	myContent, err := service.MyContent(authorID)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": "Failed to fetch content"})
+		return c.JSON(http.StatusInternalServerError, &models.Response{
+			Code:    500,
+			Message: "Terjadi kesalahan internal pada server. Mohon coba beberapa saat lagi!",
+			Status:  false,
+		})
 	}
 
 	return c.JSON(http.StatusOK, myContent)
@@ -86,25 +95,37 @@ func CreateContent(c echo.Context) error {
 	tokenOnly := tokenSplit[1]
 
 	if tokenStr == "" {
-		return c.JSON(http.StatusUnauthorized, map[string]interface{}{"error": "Token not provided"})
+		return c.JSON(http.StatusUnauthorized, "Token tidak tersedia")
 	}
 	authorID := c.Get("author_id").(int)
 	_, err := service.GetAuthorInfoFromToken(tokenOnly)
 	if err != nil {
-		return c.JSON(http.StatusUnauthorized, map[string]interface{}{"error": "Invalid or missing token"})
+		return c.JSON(http.StatusUnauthorized, "Invalid token atau token tidak ditemukan!")
 	}
 
 	var createContent models.Content
 	if err := c.Bind(&createContent); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": "Invalid data provided"})
+		return c.JSON(http.StatusBadRequest, &models.Response{
+			Code:    400,
+			Message: "Data invalid!",
+			Status:  false,
+		})
 	}
 
 	err = service.CreateContent(createContent, authorID)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": "Failed to create content"})
+		return c.JSON(http.StatusInternalServerError, &models.Response{
+			Code:    500,
+			Message: "Terjadi kesalahan internal pada server. Mohon coba beberapa saat lagi!",
+			Status:  false,
+		})
 	}
 
-	return c.JSON(http.StatusOK, map[string]interface{}{"message": "Content created successfully"})
+	return c.JSON(http.StatusOK, &models.Response{
+		Code:    200,
+		Message: "Konten berhasil dibuat!",
+		Status:  true,
+	})
 
 }
 
@@ -115,35 +136,55 @@ func ContentUpdate(c echo.Context) error {
 	tokenOnly := tokenSplit[1]
 
 	if tokenStr == "" {
-		return c.JSON(http.StatusUnauthorized, map[string]interface{}{"error": "Token not provided"})
+		return c.JSON(http.StatusUnauthorized, "Token tidak tersedia")
 	}
 
 	userID, err := service.GetAuthorInfoFromToken(tokenOnly)
 	if err != nil {
-		return c.JSON(http.StatusUnauthorized, map[string]interface{}{"error": "Invalid or missing token"})
+		return c.JSON(http.StatusUnauthorized, "Invalid token atau token tidak ada")
 	}
 
 	var editContent models.Content
 	if err := c.Bind(&editContent); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": "Invalid data provided"})
+		return c.JSON(http.StatusBadRequest, &models.Response{
+			Code:    400,
+			Message: "Data invalid!",
+			Status:  false,
+		})
 	}
 	// Mengambil author_id dari konten yang ingin diedit
 	originalContent, err := service.Content(id)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": "Failed to fetch content"})
+		return c.JSON(http.StatusInternalServerError, &models.Response{
+			Code:    500,
+			Message: "Failed to fetch content",
+			Status:  false,
+		})
 	}
 
 	// Memeriksa apakah user_id dari token cocok dengan author_id dari konten
 	if userID != originalContent.Author_id {
-		return c.JSON(http.StatusForbidden, map[string]interface{}{"error": "You are not authorized to edit this content"})
+		return c.JSON(http.StatusForbidden, &models.Response{
+			Code:    403,
+			Message: "Kamu tidak memiliki akses untuk mengedit content ini",
+			Status:  false,
+		})
 	}
 
 	_, err = service.EditContent(editContent, id, userID)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": "Failed to edit content"})
+		return c.JSON(http.StatusInternalServerError, &models.Response{
+			Code:    500,
+			Message: "Terjadi kesalahan internal pada server. Mohon coba beberapa saat lagi!",
+			Status:  false,
+		})
 	}
 
-	return c.JSON(http.StatusOK, map[string]interface{}{"message": "Content edited successfully"})
+	return c.JSON(http.StatusOK, &models.Response{
+		Code:    200,
+		Message: "Konten telah diperbarui",
+		Status:  true,
+	})
 }
 
 func ContentDelete(c echo.Context) error {
@@ -153,37 +194,61 @@ func ContentDelete(c echo.Context) error {
 	tokenOnly := tokenSplit[1]
 
 	if tokenStr == "" {
-		return c.JSON(http.StatusUnauthorized, "Token not provided")
+		return c.JSON(http.StatusUnauthorized, "Token tidak tersedia")
 	}
 
 	userID, err := service.GetAuthorInfoFromToken(tokenOnly)
 	if err != nil {
-		return c.JSON(http.StatusUnauthorized, "Invalid or missing token")
+		return c.JSON(http.StatusUnauthorized, &models.Response{
+			Code:    401,
+			Message: "Invalid token atau token tidak ada",
+			Status:  false,
+		})
 	}
 
 	var deleteContent models.Content
 	if err := c.Bind(&deleteContent); err != nil {
-		return c.JSON(http.StatusBadRequest, "Invalid data provided")
+		return c.JSON(http.StatusBadRequest, &models.Response{
+			Code:    400,
+			Message: "Data invalid",
+			Status:  false,
+		})
 	}
 	// Mengambil author_id dari konten yang ingin diedit
 	originalContent, err := service.Content(id)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, "Failed to fetch content")
+		return c.JSON(http.StatusInternalServerError, &models.Response{
+			Code:    500,
+			Message: "Failed to fetch content",
+			Status:  false,
+		})
 	}
 
 	// Memeriksa apakah user_id dari token cocok dengan author_id dari konten
 	if userID != originalContent.Author_id {
-		return c.JSON(http.StatusForbidden, "You are not authorized to delete this content")
+		return c.JSON(http.StatusForbidden, &models.Response{
+			Code:    403,
+			Message: "Kamu tidak memiliki akses untuk menghapus content ini",
+			Status:  false,
+		})
 	}
 
 	_, err = service.DeleteContent(deleteContent, id, userID)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, "Failed to delete content")
+		return c.JSON(http.StatusInternalServerError, &models.Response{
+			Code:    500,
+			Message: "Gagal menghapus content",
+			Status:  false,
+		})
 	}
 
 	//	return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 
-	return c.JSON(http.StatusOK, "okee")
+	return c.JSON(http.StatusOK, &models.Response{
+		Code:    200,
+		Message: "Berhasil dihapus!",
+		Status:  true,
+	})
 }
 
 func DeleteContent(c echo.Context) error {
@@ -193,32 +258,56 @@ func DeleteContent(c echo.Context) error {
 	tokenOnly := tokenSplit[1]
 
 	if tokenStr == "" {
-		return c.JSON(http.StatusUnauthorized, "Token not provided")
+		return c.JSON(http.StatusUnauthorized, &models.Response{
+			Code:    401,
+			Message: "Token tidak tersedia",
+			Status:  false,
+		})
 	}
 
 	userID, err := service.GetAuthorInfoFromToken(tokenOnly)
 	if err != nil {
-		return c.JSON(http.StatusUnauthorized, "Invalid or missing token")
+		return c.JSON(http.StatusUnauthorized, &models.Response{
+			Code:    401,
+			Message: "Invalid token atau token tidak ada!",
+			Status:  false,
+		})
 	}
 
 	var deleteContent models.Content
 	if err := c.Bind(&deleteContent); err != nil {
-		return c.JSON(http.StatusBadRequest, "Invalid data provided")
+		return c.JSON(http.StatusBadRequest, &models.Response{
+			Code:    400,
+			Message: "Data invalid!",
+			Status:  false,
+		})
 	}
 	// Mengambil author_id dari konten yang ingin diedit
 	deleteContent, err = service.Content(id)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, "Failed to fetch content")
+		return c.JSON(http.StatusInternalServerError, &models.Response{
+			Code:    500,
+			Message: "Failed to fetch content",
+			Status:  false,
+		})
 	}
 
 	_, err = service.DeleteContent(deleteContent, id, userID)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, "Failed to delete content")
+		return c.JSON(http.StatusInternalServerError, &models.Response{
+			Code:    500,
+			Message: "Gagal menghapus content",
+			Status:  false,
+		})
 	}
 
 	//	return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 
-	return c.JSON(http.StatusOK, "okee")
+	return c.JSON(http.StatusOK, &models.Response{
+		Code:    200,
+		Message: "Berhasil dihapus!",
+		Status:  true,
+	})
 }
 
 type ContentController struct {
@@ -232,19 +321,31 @@ func NewContentController(contentService *service.ContentService) *ContentContro
 func (c *ContentController) UploadCoverImage(e echo.Context) error {
 	contentID, err := strconv.Atoi(e.Param("contentID"))
 	if err != nil {
-		return e.String(http.StatusBadRequest, "Invalid content ID")
+		return e.JSON(http.StatusBadRequest, &models.Response{
+			Code:    400,
+			Message: "Invalid content ID",
+			Status:  false,
+		})
 	}
 
 	// Menerima berkas yang diunggah
 	file, err := e.FormFile("cover_image")
 	if err != nil {
-		return e.String(http.StatusBadRequest, "Error uploading image")
+		return e.JSON(http.StatusBadRequest, &models.Response{
+			Code:    400,
+			Message: "Error mengupload gambar",
+			Status:  false,
+		})
 	}
 
 	// Simpan gambar dengan nama unik di server (ganti dengan path yang sesuai)
 	pathGambar := "E:/golang/blog/cover/" + file.Filename
 	if err := saveUploadedFile(file, pathGambar); err != nil {
-		return e.String(http.StatusInternalServerError, "Error saving image")
+		return e.JSON(http.StatusInternalServerError, &models.Response{
+			Code:    500,
+			Message: "Error menyimpan gambar!",
+			Status:  false,
+		})
 	}
 
 	// Dapatkan URL gambar yang baru diunggah
@@ -253,8 +354,12 @@ func (c *ContentController) UploadCoverImage(e echo.Context) error {
 
 	// Upload URL gambar sampul ke layanan ContentService
 	if err := c.contentService.UploadCoverImage(int(contentID), coverURL); err != nil {
-		return e.String(http.StatusInternalServerError, "Failed to upload cover image URL")
+		return e.JSON(http.StatusInternalServerError, "Failed to upload cover image URL")
 	}
 
-	return e.String(http.StatusOK, "Cover image uploaded and URL updated")
+	return e.JSON(http.StatusOK, &models.Response{
+		Code:    200,
+		Message: "Berhasil mengupload gambar!",
+		Status:  true,
+	})
 }
