@@ -51,12 +51,12 @@ func Route() *echo.Echo {
 	r.POST("/register-reader", controller.RegisterReader)
 	r.POST("/register-author", controller.RegisterAuthor)
 
-	authGroup.PUT("/password/change", controller.PasswordUpdate)
-
 	authGroup.GET("/profile", controller.GetSpecProfile)
 	authGroup.PUT("/profile/update", controller.ProfileUpdate)
 	//rute untuk mengunggah foto proflil
 	authGroup.PUT("/upload-picture", userController.UploadPicture)
+
+	authGroup.PUT("/password/change", controller.PasswordUpdate)
 
 	// all about contents
 	r.GET("/contents", controller.GetAllContent)
@@ -78,7 +78,7 @@ func Route() *echo.Echo {
 	//about admin permission to manage users
 	adminGroup.GET("/users", controller.GetAllUser)
 	//adminGroup.PUT("/user/update/:id", controller.UserUpdate)
-	adminGroup.PUT("/user/update/:id", controller.UserRoleUpdate)
+	adminGroup.PUT("/user/update-role/:id", controller.UserRoleUpdate)
 	adminGroup.DELETE("/user/delete/:id", controller.UserDelete)
 
 	adminGroup.POST("/logout", controller.EchoHandleLogout)
