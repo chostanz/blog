@@ -40,10 +40,10 @@ func SpecCategory(id int) (models.Kategori, error) {
 }
 
 func ContentCategory(id int) ([]models.SpecCategory, error) {
-	var specCategoryies []models.SpecCategory
+	var specCategories []models.SpecCategory
 	idStr := strconv.Itoa(id)
 
-	err := db.Select(&specCategoryies, "SELECT c.name, co.id, co.title, co.content, co.created_at, co.modified_at, co.created_by, co.modified_by FROM categories c JOIN contents co ON c.id = co.category_id WHERE c.id = $1", idStr)
+	err := db.Select(&specCategories, "SELECT c.name, co.id, co.title, co.content, co.created_at, co.modified_at, co.created_by, co.modified_by FROM categories c JOIN contents co ON c.id = co.category_id WHERE c.id = $1", idStr)
 
 	if err != nil {
 		fmt.Println("Error fetching category with ID", idStr, ":", err)
@@ -51,8 +51,7 @@ func ContentCategory(id int) ([]models.SpecCategory, error) {
 		fmt.Println("Error:", err)
 		return []models.SpecCategory{}, err
 	}
-	fmt.Println("Fetched category:", specCategoryies)
-	return specCategoryies, nil
+	return specCategories, nil
 }
 
 func CreateCategory(createCategory models.Kategori) error {

@@ -57,8 +57,6 @@ func GetContentCategory(c echo.Context) error {
 			Status:  false,
 		})
 	}
-
-	//fmt.Println("Category fetched successfully - ID:", getCategory[0].Id)
 	return c.JSON(http.StatusOK, getCategory)
 }
 
