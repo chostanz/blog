@@ -69,7 +69,7 @@ func GetAuthorInfoFromToken(tokenStr string) (int, error) {
 
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
-		return 0, errors.New("Invalid token claims")
+		return 0, errors.New("invalid token claims")
 	}
 
 	authorID := int(claims["id_user"].(float64))
