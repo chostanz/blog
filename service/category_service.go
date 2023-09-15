@@ -51,6 +51,7 @@ func ContentCategory(id int) ([]models.SpecCategory, error) {
 		fmt.Println("Error:", err)
 		return []models.SpecCategory{}, err
 	}
+	fmt.Println("Category fetched successfully - ID:", specCategories)
 	return specCategories, nil
 }
 
