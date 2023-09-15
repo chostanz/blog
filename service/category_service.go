@@ -39,20 +39,20 @@ func SpecCategory(id int) (models.Kategori, error) {
 	return specCategory, nil
 }
 
-func ContentCategory(id int) (models.SpecCategory, error) {
-	var specCategory models.SpecCategory
+func ContentCategory(id int) ([]models.SpecCategory, error) {
+	var specCategoryies []models.SpecCategory
 	idStr := strconv.Itoa(id)
 
-	err := db.Get(&specCategory, "SELECT c.name, co.id, co.title, co.content, co.created_at, co.modified_at, co.created_by, co.modified_by FROM categories c JOIN contents co ON c.id = co.category_id WHERE c.id = $1", idStr)
+	err := db.Select(&specCategoryies, "SELECT c.name, co.id, co.title, co.content, co.created_at, co.modified_at, co.created_by, co.modified_by FROM categories c JOIN contents co ON c.id = co.category_id WHERE c.id = $1", idStr)
 
 	if err != nil {
 		fmt.Println("Error fetching category with ID", idStr, ":", err)
 
 		fmt.Println("Error:", err)
-		return models.SpecCategory{}, err
+		return []models.SpecCategory{}, err
 	}
-	fmt.Println("Fetched category:", specCategory.Category)
-	return specCategory, nil
+	fmt.Println("Fetched category:", specCategoryies)
+	return specCategoryies, nil
 }
 
 func CreateCategory(createCategory models.Kategori) error {
@@ -66,9 +66,9 @@ func CreateCategory(createCategory models.Kategori) error {
 func EditCategory(editCategory models.Kategori, id int) (models.Kategori, error) {
 	idStr := strconv.Itoa(id)
 
-	_, err := db.NamedExec("UPDATE categories SET name = :category WHERE id = :id", map[string]interface{}{
-		"category": editCategory.Category,
-		"id":       idStr,
+	_, err := db.NamedExec("UPDATE categories SET name = :name WHERE id = :id", map[string]interface{}{
+		"name": editCategory.Category,
+		"id":   idStr,
 	})
 
 	if err != nil {

@@ -45,20 +45,20 @@ func GetSpecCategory(c echo.Context) error {
 }
 
 func GetContentCategory(c echo.Context) error {
-	id, _ := strconv.Atoi(c.Param("id"))
-	fmt.Println("Fetching category with ID:", id)
+	idStr, _ := strconv.Atoi(c.Param("id"))
+	fmt.Println("Fetching category with ID:", idStr)
 
-	getCategory, err := service.ContentCategory(id)
+	getCategory, err := service.ContentCategory(idStr)
 	if err != nil {
 		fmt.Println("Error:", err)
-		return echo.NewHTTPError(http.StatusNotFound, &models.Response{
+		return c.JSON(http.StatusNotFound, &models.Response{
 			Code:    404,
 			Message: "Kategori tidak ditemukan",
 			Status:  false,
 		})
 	}
 
-	fmt.Println("Category fetched successfully - ID:", getCategory.Id)
+	//fmt.Println("Category fetched successfully - ID:", getCategory[0].Id)
 	return c.JSON(http.StatusOK, getCategory)
 }
 
