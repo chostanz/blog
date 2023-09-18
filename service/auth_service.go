@@ -12,6 +12,16 @@ import (
 
 var db *sqlx.DB = database.Koneksi()
 
+type ValidationError struct {
+	Message string
+	Field   string
+	Tag     string
+}
+
+func (ve *ValidationError) Error() string {
+	return ve.Message
+}
+
 func CheckCredential(userLogin models.LoginParam) (int, bool, int, error) {
 	var isAuthentication bool
 	var id int
@@ -75,6 +85,14 @@ func CheckCredential(userLogin models.LoginParam) (int, bool, int, error) {
 }
 
 func RegisterReader(userRegister models.RegisterParam) error {
+	if len(userRegister.Password) < 8 {
+		return &ValidationError{
+			Message: "Password should be of 8 characters long",
+			Field:   "password",
+			Tag:     "strong_password",
+		}
+	}
+
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(userRegister.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return err
@@ -109,6 +127,13 @@ func RegisterReader(userRegister models.RegisterParam) error {
 }
 
 func RegisterAuthor(userRegister models.RegisterParam) error {
+	if len(userRegister.Password) < 8 {
+		return &ValidationError{
+			Message: "Password should be of 8 characters long",
+			Field:   "password",
+			Tag:     "strong_password",
+		}
+	}
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(userRegister.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return err

@@ -104,6 +104,15 @@ func RegisterReader(c echo.Context) error {
 		registerErr := service.RegisterReader(userRegister)
 		if registerErr != nil {
 
+			if validationErr, ok := registerErr.(*service.ValidationError); ok {
+				if validationErr.Tag == "strong_password" {
+					return c.JSON(http.StatusBadRequest, &models.RegisterResp{
+						Code:    400,
+						Message: "Password harus memiliki setidaknya 8 karakter",
+						Status:  false,
+					})
+				}
+			}
 			return c.JSON(http.StatusBadRequest, &models.RegisterResp{
 				Code:    400,
 				Message: "Username atau email telah digunakan!",
@@ -116,9 +125,7 @@ func RegisterReader(c echo.Context) error {
 			Status:  true,
 		})
 	}
-
 	return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-
 }
 
 func RegisterAuthor(c echo.Context) error {
@@ -134,6 +141,15 @@ func RegisterAuthor(c echo.Context) error {
 		registerErr := service.RegisterAuthor(userRegister)
 		if registerErr != nil {
 
+			if validationErr, ok := registerErr.(*service.ValidationError); ok {
+				if validationErr.Tag == "strong_password" {
+					return c.JSON(http.StatusBadRequest, &models.RegisterResp{
+						Code:    400,
+						Message: "Password harus memiliki setidaknya 8 karakter",
+						Status:  false,
+					})
+				}
+			}
 			return c.JSON(http.StatusBadRequest, &models.RegisterResp{
 				Code:    400,
 				Message: "Username atau email telah digunakan!",
@@ -146,9 +162,7 @@ func RegisterAuthor(c echo.Context) error {
 			Status:  true,
 		})
 	}
-
 	return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-
 }
 
 func EchoHandleLogout(c echo.Context) error {
