@@ -85,7 +85,7 @@ func CheckCredential(userLogin models.LoginParam) (int, bool, int, error) {
 }
 
 func RegisterReader(userRegister models.RegisterParam) error {
-	if len(userRegister.Password) < 8 {
+	if len(userRegister.Password) < 7 {
 		return &ValidationError{
 			Message: "Password should be of 8 characters long",
 			Field:   "password",
@@ -127,7 +127,7 @@ func RegisterReader(userRegister models.RegisterParam) error {
 }
 
 func RegisterAuthor(userRegister models.RegisterParam) error {
-	if len(userRegister.Password) < 8 {
+	if len(userRegister.Password) < 7 {
 		return &ValidationError{
 			Message: "Password should be of 8 characters long",
 			Field:   "password",
