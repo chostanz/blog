@@ -85,6 +85,16 @@ func PasswordUpdate(c echo.Context) error {
 
 	errS := service.EditPassword(passUpdate, idUser)
 	if errS != nil {
+
+		if validationErr, ok := errS.(*service.ValidationError); ok {
+			if validationErr.Tag == "strong_password" {
+				return c.JSON(http.StatusBadRequest, &models.RegisterResp{
+					Code:    400,
+					Message: "Password harus memiliki setidaknya 8 karakter",
+					Status:  false,
+				})
+			}
+		}
 		return c.JSON(http.StatusInternalServerError, &models.Response{
 			Code:    500,
 			Message: "Password lama salah!",

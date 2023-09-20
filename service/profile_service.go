@@ -53,6 +53,13 @@ func EditPassword(changePassword models.ChangePasswordRequest, id int) error {
 		return err
 	}
 
+	if len(changePassword.NewPassword) < 8 {
+		return &ValidationError{
+			Message: "Password should be of 8 characters long",
+			Field:   "password",
+			Tag:     "strong_password",
+		}
+	}
 	errBycript := bcrypt.CompareHashAndPassword(decodedPassword, []byte(changePassword.OldPassword))
 	if errBycript != nil {
 		fmt.Println("Error comparing old passwords:", errBycript)
@@ -86,8 +93,6 @@ type UserService struct {
 	db *sqlx.DB
 }
 
-// membuat function baru dengan parameter db tipe *gorm.DB yang nilai akhirnya adalah UserService
-// mengembalikan userservice yang didapat dari objek userservice yg diinisiasi dengan db
 func NewUserService(db *sqlx.DB) *UserService {
 	return &UserService{db: db}
 }
