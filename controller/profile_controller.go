@@ -95,8 +95,8 @@ func PasswordUpdate(c echo.Context) error {
 				})
 			}
 		}
-		return c.JSON(http.StatusInternalServerError, &models.Response{
-			Code:    500,
+		return c.JSON(http.StatusUnauthorized, &models.Response{
+			Code:    401,
 			Message: "Password lama salah!",
 			Status:  false,
 		})

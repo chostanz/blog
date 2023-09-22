@@ -38,9 +38,9 @@ func GetSpecContent(c echo.Context) error {
 
 	getContent, err := service.Content(id)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, &models.Response{
-			Code:    500,
-			Message: "Terjadi kesalahan internal pada server. Mohon coba beberapa saat lagi!",
+		return c.JSON(http.StatusNotFound, &models.Response{
+			Code:    404,
+			Message: "Konten tidak ditemukan!",
 			Status:  false,
 		})
 	}
@@ -121,8 +121,8 @@ func CreateContent(c echo.Context) error {
 		})
 	}
 
-	return c.JSON(http.StatusOK, &models.Response{
-		Code:    200,
+	return c.JSON(http.StatusCreated, &models.Response{
+		Code:    201,
 		Message: "Konten berhasil dibuat!",
 		Status:  true,
 	})
@@ -217,9 +217,9 @@ func ContentDelete(c echo.Context) error {
 	// Mengambil author_id dari konten yang ingin diedit
 	originalContent, err := service.Content(id)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, &models.Response{
-			Code:    500,
-			Message: "Failed to fetch content",
+		return c.JSON(http.StatusNotFound, &models.Response{
+			Code:    404,
+			Message: "Konten tidak tersedia!",
 			Status:  false,
 		})
 	}
@@ -285,9 +285,9 @@ func DeleteContent(c echo.Context) error {
 	// Mengambil author_id dari konten yang ingin diedit
 	deleteContent, err = service.Content(id)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, &models.Response{
-			Code:    500,
-			Message: "Failed to fetch content",
+		return c.JSON(http.StatusNotFound, &models.Response{
+			Code:    404,
+			Message: "Konten tidak tersedia!",
 			Status:  false,
 		})
 	}

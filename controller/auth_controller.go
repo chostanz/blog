@@ -67,7 +67,7 @@ func Login(c echo.Context) error {
 			"author_id": authorID,
 		},
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(time.Minute * 15).Unix(), // Tambahkan waktu kadaluwarsa (15 menit)
+			ExpiresAt: time.Now().Add(time.Hour * 12).Unix(), // Tambahkan waktu kadaluwarsa (15 menit)
 		},
 	}
 
@@ -167,6 +167,9 @@ func RegisterAuthor(c echo.Context) error {
 
 func EchoHandleLogout(c echo.Context) error {
 
+	// userTypeStr := c.QueryParam("id_role")   // Bisa juga menggunakan Header
+	// userType, _ := strconv.Atoi(userTypeStr) // Mengonversi nilai menjadi tipe int
+
 	token, ok := c.Get("users").(*jwt.Token)
 	InvalidTokens[token.Raw] = struct{}{}
 	if !ok {
@@ -185,6 +188,22 @@ func EchoHandleLogout(c echo.Context) error {
 			Status:  false,
 		})
 	}
+	// // Cek jenis pengguna
+	// switch userType {
+	// case 1:
+	// 	// Lakukan logout untuk admin
+	// 	// Contoh: Hapus token otentikasi dari basis data atau sesi admin.
+	// case 2:
+	// 	// Lakukan logout untuk author
+	// 	// Contoh: Hapus token otentikasi dari basis data atau sesi author.
+	// default:
+	// 	// Jenis pengguna tidak dikenali.
+	// 	return c.JSON(http.StatusBadRequest, &models.Response{
+	// 		Code:    http.StatusBadRequest,
+	// 		Message: "Jenis pengguna tidak valid",
+	// 		Status:  false,
+	// 	})
+	// }
 
 	return c.JSON(http.StatusOK, &models.LoginResp{
 		Code:    200,

@@ -27,7 +27,7 @@ func GetAllUser(c echo.Context) error {
 func UserUpdate(c echo.Context) error {
 	id, _ := strconv.Atoi(c.Param("id"))
 
-	var editUser models.Users
+	var editUser models.UserEdit
 	c.Bind(&editUser)
 	err := c.Validate(&editUser)
 

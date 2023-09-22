@@ -193,6 +193,64 @@ func AuthorMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	}
 }
 
+func LogoutMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		tokenString := c.Request().Header.Get("Authorization")
+		tokenSplit := strings.Split(tokenString, " ")
+		//fmt.Println("Token", tokenSplit)
+		tokenOnly := tokenSplit[1]
+		if tokenString == "" {
+			return c.JSON(http.StatusUnauthorized, &models.Response{
+				Code:    401,
+				Message: "Token tidak ditemukan!",
+				Status:  false,
+			})
+		}
+
+		token, err := jwt.Parse(tokenOnly, func(token *jwt.Token) (interface{}, error) {
+			return []byte("rahasia"), nil
+		})
+		if err != nil || !token.Valid {
+			return c.JSON(http.StatusUnauthorized, &models.Response{
+				Code:    401,
+				Message: "Token invalid!",
+				Status:  false,
+			})
+		}
+
+		claims, ok := token.Claims.(jwt.MapClaims)
+		if !ok {
+			return c.JSON(http.StatusUnauthorized, &models.Response{
+				Code:    401,
+				Message: "Token claims invalid!",
+				Status:  false,
+			})
+		}
+		if _, exists := controller.InvalidTokens[token.Raw]; exists {
+			return c.JSON(http.StatusUnauthorized, &models.Response{
+				Code:    401,
+				Message: "Sesi berakhir! Silahkan login kembali",
+				Status:  false,
+			})
+		}
+		authorID := int(claims["id_user"].(float64))
+		c.Set("author_id", authorID)
+
+		c.Set("users", token)
+
+		roleID := int(claims["id_role"].(float64))
+		if roleID == 1 || roleID == 2 {
+			fmt.Println("Access granted")
+		} else {
+			return c.JSON(http.StatusForbidden, &models.Response{
+				Code:    403,
+				Message: "Akses ditolak!",
+				Status:  false,
+			})
+		}
+		return next(c)
+	}
+}
 func SetContentServiceMiddleware(contentService *service.ContentService) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {

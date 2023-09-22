@@ -81,8 +81,7 @@ func Route() *echo.Echo {
 	adminGroup.PUT("/user/update-role/:id", controller.UserRoleUpdate)
 	adminGroup.DELETE("/user/delete/:id", controller.UserDelete)
 
-	adminGroup.POST("/logout", controller.EchoHandleLogout)
-	authorGroup.POST("/logout", controller.EchoHandleLogout)
+	r.POST("/logout", controller.EchoHandleLogout, middleware.LogoutMiddleware)
 
 	r.Static("/picture", "E:/golang/blog/picture")
 	r.Static("/cover", "E:/golang/blog/cover")

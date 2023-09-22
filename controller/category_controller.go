@@ -57,6 +57,14 @@ func GetContentCategory(c echo.Context) error {
 			Status:  false,
 		})
 	}
+	if len(getCategory) == 0 {
+		fmt.Println("Category not found - ID:", idStr)
+		return c.JSON(http.StatusNotFound, &models.Response{
+			Code:    http.StatusNotFound,
+			Message: "Kategori tidak ditemukan",
+			Status:  false,
+		})
+	}
 	return c.JSON(http.StatusOK, getCategory)
 }
 
@@ -82,8 +90,8 @@ func CategoryAdd(c echo.Context) error {
 			Status:  false,
 		})
 	}
-	return c.JSON(http.StatusOK, &models.Response{
-		Code:    200,
+	return c.JSON(http.StatusCreated, &models.Response{
+		Code:    201,
 		Message: "Berhasil menambahkan kategori!",
 		Status:  true,
 	})
@@ -97,6 +105,14 @@ func CategoryUpdate(c echo.Context) error {
 
 	c.Bind(&editCategory)
 	err := c.Validate(&editCategory)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, &models.Response{
+			Code:    400,
+			Message: "Data yang dimasukkan tidak valid",
+			Status:  false,
+		})
+
+	}
 
 	if err == nil {
 		_, updateErr := service.EditCategory(editCategory, id)
@@ -108,6 +124,7 @@ func CategoryUpdate(c echo.Context) error {
 			})
 		}
 	}
+
 	return c.JSON(http.StatusOK, &models.Response{
 		Code:    200,
 		Message: "Kategori berhasil diubah!",
@@ -121,7 +138,7 @@ func CategoryDelete(c echo.Context) error {
 	var deleteCategory models.Kategori
 	_, err := service.DeleteCategory(deleteCategory, id)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, &models.Response{
+		return c.JSON(http.StatusInternalServerError, &models.Response{
 			Code:    500,
 			Message: "Terjadi kesalahan internal pada server. Mohon coba beberapa saat lagi!",
 			Status:  false,

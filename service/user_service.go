@@ -9,7 +9,7 @@ import (
 func UsersAll() ([]models.Users, error) {
 	usersGet := []models.Users{}
 
-	rows, err := db.Queryx("SELECT u.id, u.username, u.password, u.email, r.role FROM users u JOIN users_roles ur ON u.id = ur.user_id JOIN roles r ON ur.role_id = r.id")
+	rows, err := db.Queryx("SELECT u.id, u.username, u.email, r.role FROM users u JOIN users_roles ur ON u.id = ur.user_id JOIN roles r ON ur.role_id = r.id")
 	if err != nil {
 		return nil, err
 	}
@@ -21,7 +21,7 @@ func UsersAll() ([]models.Users, error) {
 	return usersGet, nil
 }
 
-func EditUser(editUser models.Users, id int) (models.Users, error) {
+func EditUser(editUser models.UserEdit, id int) (models.UserEdit, error) {
 	idStr := strconv.Itoa(id)
 
 	_, err := db.NamedExec("UPDATE users SET username = :username, email = :email, password = :password WHERE id = :id", map[string]interface{}{
@@ -32,7 +32,7 @@ func EditUser(editUser models.Users, id int) (models.Users, error) {
 	})
 	if err != nil {
 		fmt.Println("Error updating user:", err)
-		return models.Users{}, err
+		return models.UserEdit{}, err
 	}
 
 	return editUser, nil
