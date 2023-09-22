@@ -41,7 +41,7 @@ func Login(c echo.Context) error {
 
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, &models.LoginResp{
-			Code:    404,
+			Code:    400,
 			Message: "Data login invalid",
 			Status:  false,
 		})
