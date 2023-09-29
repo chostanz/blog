@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/badoux/checkmail"
 	"github.com/go-playground/validator/v10"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/labstack/echo/v4"
@@ -40,9 +41,9 @@ func Login(c echo.Context) error {
 	err := c.Validate(&loginbody)
 
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, &models.LoginResp{
-			Code:    400,
-			Message: "Data login invalid",
+		return c.JSON(http.StatusInternalServerError, &models.LoginResp{
+			Code:    500,
+			Message: "Terjadi kesalahan pada internal server. Coba beberapa saat lagi!",
 			Status:  false,
 		})
 	}
@@ -77,7 +78,7 @@ func Login(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, &models.AuthResp{
 			Code:    500,
-			Message: "Failed to create token",
+			Message: "Gagal membuat token. Mohon coba beberapa saat lagi!",
 			Status:  false,
 		})
 	}
@@ -106,8 +107,8 @@ func RegisterReader(c echo.Context) error {
 
 			if validationErr, ok := registerErr.(*service.ValidationError); ok {
 				if validationErr.Tag == "strong_password" {
-					return c.JSON(http.StatusBadRequest, &models.RegisterResp{
-						Code:    400,
+					return c.JSON(http.StatusUnprocessableEntity, &models.RegisterResp{
+						Code:    422,
 						Message: "Password harus memiliki setidaknya 8 karakter",
 						Status:  false,
 					})
@@ -125,7 +126,7 @@ func RegisterReader(c echo.Context) error {
 			Status:  true,
 		})
 	}
-	return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	return c.JSON(http.StatusBadRequest, err.Error())
 }
 
 func RegisterAuthor(c echo.Context) error {
@@ -135,6 +136,15 @@ func RegisterAuthor(c echo.Context) error {
 	var userRegister models.RegisterParam
 
 	c.Bind(&userRegister)
+	errEmail := checkmail.ValidateFormat(userRegister.Email)
+	if errEmail != nil {
+		return c.JSON(http.StatusUnprocessableEntity, &models.Response{
+			Code:    422,
+			Message: "Format email tidak valid",
+			Status:  false,
+		})
+	}
+
 	err := c.Validate(&userRegister)
 
 	if err == nil {
@@ -143,8 +153,8 @@ func RegisterAuthor(c echo.Context) error {
 
 			if validationErr, ok := registerErr.(*service.ValidationError); ok {
 				if validationErr.Tag == "strong_password" {
-					return c.JSON(http.StatusBadRequest, &models.RegisterResp{
-						Code:    400,
+					return c.JSON(http.StatusUnprocessableEntity, &models.RegisterResp{
+						Code:    422,
 						Message: "Password harus memiliki setidaknya 8 karakter",
 						Status:  false,
 					})
@@ -161,15 +171,16 @@ func RegisterAuthor(c echo.Context) error {
 			Message: "Berhasil register",
 			Status:  true,
 		})
+	} else {
+		return c.JSON(http.StatusInternalServerError, &models.Response{
+			Code:    500,
+			Message: "Terjadi kesalahan internal pada server. Mohon coba beberapa saat lagi",
+			Status:  false,
+		})
 	}
-	return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 }
 
 func EchoHandleLogout(c echo.Context) error {
-
-	// userTypeStr := c.QueryParam("id_role")   // Bisa juga menggunakan Header
-	// userType, _ := strconv.Atoi(userTypeStr) // Mengonversi nilai menjadi tipe int
-
 	token, ok := c.Get("users").(*jwt.Token)
 	InvalidTokens[token.Raw] = struct{}{}
 	if !ok {
@@ -188,22 +199,6 @@ func EchoHandleLogout(c echo.Context) error {
 			Status:  false,
 		})
 	}
-	// // Cek jenis pengguna
-	// switch userType {
-	// case 1:
-	// 	// Lakukan logout untuk admin
-	// 	// Contoh: Hapus token otentikasi dari basis data atau sesi admin.
-	// case 2:
-	// 	// Lakukan logout untuk author
-	// 	// Contoh: Hapus token otentikasi dari basis data atau sesi author.
-	// default:
-	// 	// Jenis pengguna tidak dikenali.
-	// 	return c.JSON(http.StatusBadRequest, &models.Response{
-	// 		Code:    http.StatusBadRequest,
-	// 		Message: "Jenis pengguna tidak valid",
-	// 		Status:  false,
-	// 	})
-	// }
 
 	return c.JSON(http.StatusOK, &models.LoginResp{
 		Code:    200,

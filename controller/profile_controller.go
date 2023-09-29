@@ -3,7 +3,9 @@ package controller
 import (
 	"blog/models"
 	"blog/service"
+	"database/sql"
 	"io"
+	"log"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -14,35 +16,53 @@ import (
 type UserController struct {
 	userService *service.UserService
 }
+type ProfileNotFoundError struct {
+	Message string
+}
+
+func (e *ProfileNotFoundError) Error() string {
+	return e.Message
+}
 
 func ProfileUpdate(c echo.Context) error {
 	idUser := c.Get("id_user").(int) // Mengambil ID User
 
 	var UserProfile models.Profile
-	c.Bind(&UserProfile)
+	//c.Bind(&UserProfile)
+	if err := c.Bind(&UserProfile); err != nil {
+		return c.JSON(http.StatusBadRequest, &models.Response{
+			Code:    400,
+			Message: "Format JSON tidak valid!",
+			Status:  false,
+		})
+	}
 	err := c.Validate(&UserProfile)
 
-	if err == nil {
-		_, registerErr := service.EditProfile(UserProfile, idUser)
-		if registerErr != nil {
-
-			return echo.NewHTTPError(http.StatusBadRequest, &models.Response{
-				Code:    400,
-				Message: "Data invalid!",
-				Status:  false,
-			})
-		}
-		return c.JSON(http.StatusCreated, &models.RegisterResp{
-			Code:    201,
-			Message: "Profil berhasil disimpan!",
-			Status:  true,
+	if err != nil {
+		// Handle error validasi
+		log.Println(err)
+		// Kesalahan umum
+		return c.JSON(http.StatusBadRequest, &models.Response{
+			Code:    400,
+			Message: "Gagal memperbarui profil!",
+			Status:  false,
 		})
 	}
 
-	return c.JSON(http.StatusBadRequest, &models.Response{
-		Code:    400,
-		Message: "Gagal mengupdate profil!",
-		Status:  false,
+	_, updateErr := service.EditProfile(UserProfile, idUser)
+	if updateErr != nil {
+		log.Println(updateErr)
+		return c.JSON(http.StatusInternalServerError, &models.Response{
+			Code:    500,
+			Message: "Terjadi kesalahan internal pada server saat memperbarui profil. Mohon coba beberapa saat lagi!",
+			Status:  false,
+		})
+	}
+
+	return c.JSON(http.StatusOK, &models.RegisterResp{
+		Code:    200,
+		Message: "Profil berhasil disimpan!",
+		Status:  true,
 	})
 }
 
@@ -54,11 +74,19 @@ func GetSpecProfile(c echo.Context) error {
 	userProfile, err := service.GetProfile(idUser)
 
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, &models.Response{
-			Code:    500,
-			Message: "Terjadi kesalahan internal pada server. Mohon coba beberapa saat lagi!",
-			Status:  false,
-		})
+		if err == sql.ErrNoRows {
+			return c.JSON(http.StatusNotFound, &models.Response{
+				Code:    404,
+				Message: "Halaman profil tidak ditemukan",
+				Status:  false,
+			})
+		} else {
+			return c.JSON(http.StatusInternalServerError, &models.Response{
+				Code:    500,
+				Message: "Terjadi kesalahan internal pada server. Mohon coba beberapa saat lagi!",
+				Status:  false,
+			})
+		}
 	}
 	return c.JSON(http.StatusOK, userProfile)
 }
@@ -76,9 +104,9 @@ func PasswordUpdate(c echo.Context) error {
 	}
 
 	if err := c.Validate(&passUpdate); err != nil {
-		return c.JSON(http.StatusBadRequest, &models.Response{
-			Code:    400,
-			Message: "Validasi error",
+		return c.JSON(http.StatusUnprocessableEntity, &models.Response{
+			Code:    422,
+			Message: "Invalid data! Password tidak boleh kosong!",
 			Status:  false,
 		})
 	}
@@ -88,12 +116,20 @@ func PasswordUpdate(c echo.Context) error {
 
 		if validationErr, ok := errS.(*service.ValidationError); ok {
 			if validationErr.Tag == "strong_password" {
-				return c.JSON(http.StatusBadRequest, &models.RegisterResp{
-					Code:    400,
+				return c.JSON(http.StatusUnprocessableEntity, &models.RegisterResp{
+					Code:    422,
 					Message: "Password harus memiliki setidaknya 8 karakter",
 					Status:  false,
 				})
 			}
+		}
+
+		if passUpdate.OldPassword == passUpdate.NewPassword {
+			return c.JSON(http.StatusBadRequest, &models.Response{
+				Code:    400,
+				Message: "Password baru tidak boleh sama dengan password lama!",
+				Status:  false,
+			})
 		}
 		return c.JSON(http.StatusUnauthorized, &models.Response{
 			Code:    401,
@@ -135,14 +171,14 @@ func saveUploadedFile(file *multipart.FileHeader, path string) error {
 }
 
 func (c *UserController) UploadPicture(e echo.Context) error {
-	userID := e.Get("id_user").(int) // Mengambil ID U
+	userID := e.Get("id_user").(int) // Mengambil ID User
 
 	// Menerima berkas yang diunggah
 	file, err := e.FormFile("image")
 	if err != nil {
 		return e.JSON(http.StatusBadRequest, &models.Response{
 			Code:    400,
-			Message: "Data invalid!",
+			Message: "Data invalid! Data yang dimasukkan harus bertipe image!",
 			Status:  false,
 		})
 	}
@@ -152,7 +188,7 @@ func (c *UserController) UploadPicture(e echo.Context) error {
 	if err := saveUploadedFile(file, pathGambar); err != nil {
 		return e.JSON(http.StatusInternalServerError, &models.Response{
 			Code:    500,
-			Message: "Error menyimpan gambar",
+			Message: "Terjadi kesalahan internal pada saat menyimpan gambar. Coba lagi nanti!",
 			Status:  false,
 		})
 	}

@@ -15,11 +15,11 @@ func GetAllUser(c echo.Context) error {
 
 	if err != nil {
 		response := models.Response{
-			Code:    404,
-			Message: "Halaman tidak ditemukan atau url salah",
+			Code:    500,
+			Message: "Terjadi kesalahan internal server. Mohon coba beberapa saat lagi",
 			Status:  false,
 		}
-		return c.JSON(http.StatusNotFound, response)
+		return c.JSON(http.StatusInternalServerError, response)
 	}
 	return c.JSON(http.StatusOK, users)
 }
@@ -61,7 +61,7 @@ func UserRoleUpdate(c echo.Context) error {
 	userID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, &models.Response{
-			Code:    400,
+			Code:    422,
 			Message: "ID pengguna tidak valid",
 			Status:  false,
 		})
@@ -69,13 +69,24 @@ func UserRoleUpdate(c echo.Context) error {
 
 	var editRole models.Role
 	c.Bind(&editRole)
-	_, err = service.EditUserRole(editRole, userID)
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, &models.Response{
-			Code:    400,
-			Message: "Gagal memperbarui peran pengguna",
+
+	errVal := c.Validate(&editRole)
+	if errVal != nil {
+		return c.JSON(http.StatusUnprocessableEntity, &models.Response{
+			Code:    422,
+			Message: "Data yang dimasukkan tidak valid",
 			Status:  false,
 		})
+
+	}
+	_, err = service.EditUserRole(editRole, userID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, &models.Response{
+			Code:    500,
+			Message: "Terjadi kesalahan internal pada server. Mohon coba beberapa saat lagi!",
+			Status:  false,
+		})
+
 	}
 
 	return c.JSON(http.StatusOK, &models.Response{
@@ -93,7 +104,7 @@ func UserDelete(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, &models.Response{
 			Code:    500,
-			Message: "Terjadi kesalahan internal",
+			Message: "Terjadi kesalahan internal server. Mohon coba beberapa saat lagi",
 			Status:  false,
 		})
 

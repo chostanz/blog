@@ -3,6 +3,7 @@ package controller
 import (
 	"blog/models"
 	"blog/service"
+	"database/sql"
 	"net/http"
 	"strconv"
 	"strings"
@@ -20,14 +21,14 @@ func GetAllContent(c echo.Context) error {
 	content, err := service.ContentAll()
 
 	if err != nil {
+		// Handle error 500 (Internal Server Error)
 		response := models.Response{
-			Code:    404,
-			Message: "Halaman tidak ada atau url salah",
+			Code:    500,
+			Message: "Terjadi kesalahan internal pada server. Mohon coba beberapa saat lagi!",
 			Status:  false,
 		}
-		return c.JSON(http.StatusNotFound, response)
+		return c.JSON(http.StatusInternalServerError, response)
 	}
-
 	return c.JSON(http.StatusOK, content)
 }
 
@@ -38,15 +39,23 @@ func GetSpecContent(c echo.Context) error {
 
 	getContent, err := service.Content(id)
 	if err != nil {
-		return c.JSON(http.StatusNotFound, &models.Response{
-			Code:    404,
-			Message: "Konten tidak ditemukan!",
-			Status:  false,
-		})
+		if err == sql.ErrNoRows {
+			response := models.Response{
+				Code:    404,
+				Message: "Konten tidak ditemukan!",
+				Status:  false,
+			}
+			return c.JSON(http.StatusNotFound, response)
+		} else {
+			return c.JSON(http.StatusInternalServerError, &models.Response{
+				Code:    500,
+				Message: "Terjadi kesalahan internal pada server. Mohon coba beberapa saat lagi!",
+				Status:  false,
+			})
+		}
 	}
 
 	return c.JSON(http.StatusOK, getContent)
-
 }
 
 func GetMyContent(c echo.Context) error {
@@ -67,12 +76,20 @@ func GetMyContent(c echo.Context) error {
 		return []byte("rahasia"), nil // Ganti dengan kunci rahasia Anda
 	})
 	if err != nil || !token.Valid {
-		return c.JSON(http.StatusUnauthorized, "Invalid token")
+		return c.JSON(http.StatusUnauthorized, &models.Response{
+			Code:    401,
+			Message: "Invalid token",
+			Status:  false,
+		})
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
-		return c.JSON(http.StatusUnauthorized, "Invalid token claims")
+		return c.JSON(http.StatusUnauthorized, &models.Response{
+			Code:    401,
+			Message: "Invalid token claims!",
+			Status:  false,
+		})
 	}
 
 	authorID := int(claims["id_user"].(float64)) // Pastikan "user_id" sesuai dengan yang disimpan dalam token
@@ -108,6 +125,15 @@ func CreateContent(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, &models.Response{
 			Code:    400,
 			Message: "Data invalid!",
+			Status:  false,
+		})
+	}
+
+	errValidate := c.Validate(&createContent)
+	if errValidate != nil {
+		return c.JSON(http.StatusInternalServerError, &models.Response{
+			Code:    422,
+			Message: "Data tidak boleh kosong!",
 			Status:  false,
 		})
 	}
@@ -152,12 +178,21 @@ func ContentUpdate(c echo.Context) error {
 			Status:  false,
 		})
 	}
+
+	errValidate := c.Validate(&editContent)
+	if errValidate != nil {
+		return c.JSON(http.StatusInternalServerError, &models.Response{
+			Code:    422,
+			Message: "Data tidak boleh kosong!",
+			Status:  false,
+		})
+	}
 	// Mengambil author_id dari konten yang ingin diedit
 	originalContent, err := service.Content(id)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, &models.Response{
 			Code:    500,
-			Message: "Failed to fetch content",
+			Message: "Terjadi kesalahan internal server. Konten dengan id tersebut tidak ada",
 			Status:  false,
 		})
 	}
@@ -237,13 +272,10 @@ func ContentDelete(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, &models.Response{
 			Code:    500,
-			Message: "Gagal menghapus content",
+			Message: "Terjadi kesalahan internal server. Gagal menghapus content",
 			Status:  false,
 		})
 	}
-
-	//	return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-
 	return c.JSON(http.StatusOK, &models.Response{
 		Code:    200,
 		Message: "Berhasil dihapus!",
@@ -282,7 +314,7 @@ func DeleteContent(c echo.Context) error {
 			Status:  false,
 		})
 	}
-	// Mengambil author_id dari konten yang ingin diedit
+
 	deleteContent, err = service.Content(id)
 	if err != nil {
 		return c.JSON(http.StatusNotFound, &models.Response{
@@ -296,13 +328,10 @@ func DeleteContent(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, &models.Response{
 			Code:    500,
-			Message: "Gagal menghapus content",
+			Message: "Terjadi kesalahan internal server. Gagal menghapus content",
 			Status:  false,
 		})
 	}
-
-	//	return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-
 	return c.JSON(http.StatusOK, &models.Response{
 		Code:    200,
 		Message: "Berhasil dihapus!",
@@ -343,7 +372,7 @@ func (c *ContentController) UploadCoverImage(e echo.Context) error {
 	if err := saveUploadedFile(file, pathGambar); err != nil {
 		return e.JSON(http.StatusInternalServerError, &models.Response{
 			Code:    500,
-			Message: "Error menyimpan gambar!",
+			Message: "Terjadi kesalahan internal server. Mohon coba beberapa saat lagi!",
 			Status:  false,
 		})
 	}
