@@ -4,6 +4,7 @@ import (
 	"blog/models"
 	"blog/service"
 	"database/sql"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -170,6 +171,15 @@ func ContentUpdate(c echo.Context) error {
 		return c.JSON(http.StatusUnauthorized, "Invalid token atau token tidak ada")
 	}
 
+	perviousContent, errGet := service.Content(id)
+	if errGet != nil {
+		return c.JSON(http.StatusInternalServerError, &models.Response{
+			Code:    500,
+			Message: "Gagal mengambil data content saat ini. Mohon coba beberapa saat lagi!",
+			Status:  false,
+		})
+	}
+
 	var editContent models.Content
 	if err := c.Bind(&editContent); err != nil {
 		return c.JSON(http.StatusBadRequest, &models.Response{
@@ -206,6 +216,8 @@ func ContentUpdate(c echo.Context) error {
 		})
 	}
 
+	c.Set("perviousContent", perviousContent)
+
 	_, err = service.EditContent(editContent, id, userID)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, &models.Response{
@@ -215,6 +227,7 @@ func ContentUpdate(c echo.Context) error {
 		})
 	}
 
+	log.Println(perviousContent)
 	return c.JSON(http.StatusOK, &models.Response{
 		Code:    200,
 		Message: "Konten telah diperbarui",

@@ -112,6 +112,14 @@ func CategoryAdd(c echo.Context) error {
 func CategoryUpdate(c echo.Context) error {
 	id, _ := strconv.Atoi(c.Param("id"))
 
+	previousCategory, errGet := service.GetProfile(id)
+	if errGet != nil {
+		return c.JSON(http.StatusInternalServerError, &models.Response{
+			Code:    500,
+			Message: "Gagal mengambil data profil saat ini. Mohon coba beberapa saat lagi!",
+			Status:  false,
+		})
+	}
 	var editCategory models.Kategori
 
 	c.Bind(&editCategory)
@@ -126,6 +134,7 @@ func CategoryUpdate(c echo.Context) error {
 	}
 
 	if err == nil {
+		c.Set("previousCategory", previousCategory)
 		_, updateErr := service.EditCategory(editCategory, id)
 		if updateErr != nil {
 			return c.JSON(http.StatusInternalServerError, &models.Response{

@@ -27,6 +27,17 @@ func (e *ProfileNotFoundError) Error() string {
 func ProfileUpdate(c echo.Context) error {
 	idUser := c.Get("id_user").(int) // Mengambil ID User
 
+	// Mengambil data profil saat ini berdasarkan ID
+	previousProfile, errGet := service.GetProfile(idUser)
+	if errGet != nil {
+		log.Println(errGet)
+		return c.JSON(http.StatusInternalServerError, &models.Response{
+			Code:    500,
+			Message: "Gagal mengambil data profil saat ini. Mohon coba beberapa saat lagi!",
+			Status:  false,
+		})
+	}
+
 	var UserProfile models.Profile
 	//c.Bind(&UserProfile)
 	if err := c.Bind(&UserProfile); err != nil {
@@ -49,6 +60,8 @@ func ProfileUpdate(c echo.Context) error {
 		})
 	}
 
+	// Mengirim data profil sebelumnya ke form edit
+	c.Set("previousProfile", previousProfile)
 	_, updateErr := service.EditProfile(UserProfile, idUser)
 	if updateErr != nil {
 		log.Println(updateErr)
@@ -59,6 +72,7 @@ func ProfileUpdate(c echo.Context) error {
 		})
 	}
 
+	log.Println(previousProfile)
 	return c.JSON(http.StatusOK, &models.RegisterResp{
 		Code:    200,
 		Message: "Profil berhasil disimpan!",
