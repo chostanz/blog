@@ -112,7 +112,7 @@ func CategoryAdd(c echo.Context) error {
 func CategoryUpdate(c echo.Context) error {
 	id, _ := strconv.Atoi(c.Param("id"))
 
-	previousCategory, errGet := service.GetProfile(id)
+	previousCategory, errGet := service.SpecCategory(id)
 	if errGet != nil {
 		return c.JSON(http.StatusInternalServerError, &models.Response{
 			Code:    500,
