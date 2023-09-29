@@ -5,6 +5,7 @@ import (
 	"blog/service"
 	"database/sql"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -116,7 +117,7 @@ func CategoryUpdate(c echo.Context) error {
 	if errGet != nil {
 		return c.JSON(http.StatusInternalServerError, &models.Response{
 			Code:    500,
-			Message: "Gagal mengambil data profil saat ini. Mohon coba beberapa saat lagi!",
+			Message: "Gagal mengambil kategori saat ini. Mohon coba beberapa saat lagi!",
 			Status:  false,
 		})
 	}
@@ -144,6 +145,7 @@ func CategoryUpdate(c echo.Context) error {
 			})
 		}
 	}
+	log.Println(previousCategory)
 
 	return c.JSON(http.StatusOK, &models.Response{
 		Code:    200,
