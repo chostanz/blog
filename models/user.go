@@ -24,6 +24,11 @@ type User struct {
 }
 
 type Role struct {
+	UserID int `json:"id" db:"user_id"`
 	RoleID int `json:"role_id" db:"role_id" validate:"required"`
-	UserID int `json:"user_id" db:"user_id"`
+}
+
+type Roles struct {
+	Id   int    `json:"role_id" db:"id"`
+	Role string `json:"role" db:"role"`
 }

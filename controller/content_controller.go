@@ -391,7 +391,7 @@ func (c *ContentController) UploadCoverImage(e echo.Context) error {
 	}
 
 	// Dapatkan URL gambar yang baru diunggah
-	baseURL := "http://localhost:8080"
+	baseURL := "http://localhost:1234"
 	coverURL := baseURL + "/cover/" + file.Filename
 
 	// Upload URL gambar sampul ke layanan ContentService

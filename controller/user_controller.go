@@ -24,6 +24,23 @@ func GetAllUser(c echo.Context) error {
 	return c.JSON(http.StatusOK, users)
 }
 
+func GetSpecUser(c echo.Context) error {
+	id, _ := strconv.Atoi(c.Param("id"))
+
+	var getUser models.Role
+
+	getUser, err := service.GetSpecUser(id)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, &models.Response{
+			Code:    500,
+			Message: "Terjadi kesalahan internal pada server. Mohon coba beberapa saat lagi!",
+			Status:  false,
+		})
+	}
+
+	return c.JSON(http.StatusOK, getUser)
+}
+
 func UserUpdate(c echo.Context) error {
 	id, _ := strconv.Atoi(c.Param("id"))
 
@@ -114,4 +131,19 @@ func UserDelete(c echo.Context) error {
 		Message: "Berhasil menghapus user",
 		Status:  true,
 	})
+}
+
+func GetAllRole(c echo.Context) error {
+	roles, err := service.GetRole()
+
+	if err != nil {
+		response := models.Response{
+			Code:    500,
+			Message: "Terjadi kesalahan internal server. Mohon coba beberapa saat lagi",
+			Status:  false,
+		}
+		return c.JSON(http.StatusInternalServerError, response)
+	}
+
+	return c.JSON(http.StatusOK, roles)
 }

@@ -21,6 +21,18 @@ func UsersAll() ([]models.Users, error) {
 	return usersGet, nil
 }
 
+func GetSpecUser(id int) (models.Role, error) {
+	var specUser models.Role
+	idStr := strconv.Itoa(id)
+
+	err := db.Get(&specUser, "SELECT user_id, role_id FROM users_roles WHERE user_id = $1", idStr)
+	if err != nil {
+		return models.Role{}, err
+	}
+	return specUser, nil
+
+}
+
 func EditUser(editUser models.UserEdit, id int) (models.UserEdit, error) {
 	idStr := strconv.Itoa(id)
 
@@ -60,4 +72,19 @@ func DeleteUser(deleteUser models.Users, id int) (models.Users, error) {
 		return deleteUser, err
 	}
 	return deleteUser, nil
+}
+
+func GetRole() ([]models.Roles, error) {
+	getRole := []models.Roles{}
+
+	rows, err := db.Queryx("SELECT * from roles")
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		place := models.Roles{}
+		rows.StructScan(&place)
+		getRole = append(getRole, place)
+	}
+	return getRole, nil
 }

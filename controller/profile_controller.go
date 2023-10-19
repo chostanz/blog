@@ -206,7 +206,7 @@ func (c *UserController) UploadPicture(e echo.Context) error {
 			Status:  false,
 		})
 	}
-	baseURL := "http://localhost:8080"
+	baseURL := "http://localhost:1234"
 	pictureURL := baseURL + "/picture/" + file.Filename
 
 	// Memperbarui URL gambar dalam database

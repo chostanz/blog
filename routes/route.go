@@ -58,6 +58,8 @@ func Route() *echo.Echo {
 
 	authGroup.PUT("/password/change", controller.PasswordUpdate)
 
+	authGroup.GET("/user/:id", controller.GetSpecUser)
+
 	// all about contents
 	r.GET("/contents", controller.GetAllContent)
 	r.GET("/content/:id", controller.GetSpecContent)
@@ -77,6 +79,7 @@ func Route() *echo.Echo {
 
 	//about admin permission to manage users
 	adminGroup.GET("/users", controller.GetAllUser)
+	adminGroup.GET("/roles", controller.GetAllRole)
 	//adminGroup.PUT("/user/update/:id", controller.UserUpdate)
 	adminGroup.PUT("/user/update-role/:id", controller.UserRoleUpdate)
 	adminGroup.DELETE("/user/delete/:id", controller.UserDelete)
